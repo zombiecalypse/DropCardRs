@@ -22,16 +22,22 @@ body {
     background: #fff;
 }
 
-#ui {
+#top-ui {
     display: flex;
     justify-content: space-between;
     padding: 10px;
     background: #ddd;
 }
 
+#bottom-ui {
+    padding: 10px;
+    background: #ddd;
+}
+
 #answer-input {
-    width: 80%;
+    width: 100%;
     padding: 5px;
+    box-sizing: border-box;
 }
 
 #score {
