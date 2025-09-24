@@ -34,6 +34,30 @@ if (window.isFlashCardGameRunning) {
     const gameOverScreen = document.getElementById('game-over-screen');
     const answerInput = document.getElementById('answer-input');
 
+    let debugPane = null;
+    const urlParams = new URLSearchParams(window.location.search);
+    const isDebug = urlParams.get('debug') === 'true';
+
+    if (isDebug) {
+        debugPane = document.createElement('div');
+        debugPane.id = 'debug-pane';
+        Object.assign(debugPane.style, {
+            position: 'absolute',
+            top: '10px',
+            right: '10px',
+            width: '250px',
+            maxHeight: 'calc(100% - 20px)',
+            overflowY: 'auto',
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            border: '1px solid #ccc',
+            padding: '10px',
+            fontFamily: 'monospace',
+            fontSize: '12px',
+            zIndex: '100',
+        });
+        document.body.appendChild(debugPane);
+    }
+
     // --- State for cleanup ---
     let animationFrameId = null;
     let answerHandler = null;
@@ -118,6 +142,16 @@ if (window.isFlashCardGameRunning) {
     function render(timestamp) {
         cardsContainer.innerHTML = '';
         const cards = game.get_cards();
+
+        if (isDebug && debugPane) {
+            const unlockedCards = game.get_unlocked_cards();
+            let content = '<h3>Unlocked Cards</h3><ul>';
+            for (const card of unlockedCards) {
+                content += `<li><b>${card.front}</b> - ${card.back}</li>`;
+            }
+            content += '</ul>';
+            debugPane.innerHTML = content;
+        }
 
         for (const card of cards) {
             const cardElement = document.createElement('div');

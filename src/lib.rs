@@ -47,6 +47,12 @@ fn normalize_string(s: &str) -> String {
         .join(" ")
 }
 
+#[derive(Serialize)]
+struct UnlockedCard<'a> {
+    front: &'a str,
+    back: &'a str,
+}
+
 #[wasm_bindgen]
 impl Game {
     pub fn new(width: f64, height: f64, seed: u32) -> Game {
@@ -152,6 +158,17 @@ impl Game {
 
     pub fn get_id(&self) -> u32 {
         self.game_id
+    }
+
+    pub fn get_unlocked_cards(&self) -> JsValue {
+        let num_available_cards = (10 + (self.score / 10) * 5) as usize;
+        let all_cards = cards::CARD_DATA;
+        let available_cards_data = &all_cards[..num_available_cards.min(all_cards.len())];
+        let unlocked_cards: Vec<UnlockedCard> = available_cards_data
+            .iter()
+            .map(|(front, back)| UnlockedCard { front, back })
+            .collect();
+        serde_wasm_bindgen::to_value(&unlocked_cards).unwrap()
     }
 
 
