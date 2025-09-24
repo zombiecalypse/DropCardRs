@@ -15,6 +15,7 @@ pub struct Card {
     pub x: f64,
     pub y: f64,
     pub flipped: bool,
+    pub time_since_flipped: Option<f64>,
 }
 
 #[wasm_bindgen]
@@ -61,14 +62,28 @@ impl Game {
 
         let card_speed = 50.0; // pixels per second
         for card in self.cards.iter_mut() {
-            card.y += card_speed * dt;
-            if !card.flipped && card.y >= self.height - 50.0 { // 50 is card height
-                card.flipped = true;
+            if card.flipped {
+                if let Some(time) = &mut card.time_since_flipped {
+                    *time += dt;
+                }
+            } else {
+                card.y += card_speed * dt;
+                if card.y >= self.height - 50.0 { // 50 is card height
+                    card.y = self.height - 50.0; // Stop at the bottom
+                    card.flipped = true;
+                    card.time_since_flipped = Some(0.0);
+                }
             }
         }
 
-        // Remove cards that are off screen
-        self.cards.retain(|card| card.y < self.height);
+        // Remove cards that have been flipped for over 1 second
+        self.cards.retain(|card| {
+            if let Some(time_flipped) = card.time_since_flipped {
+                time_flipped < 1.0
+            } else {
+                true // Keep cards that haven't been flipped
+            }
+        });
     }
 
     fn spawn_card(&mut self) {
@@ -79,6 +94,7 @@ impl Game {
             x: (Math::random() * (self.width - 150.0)), // 150 is card width
             y: 0.0,
             flipped: false,
+            time_since_flipped: None,
         });
     }
 
@@ -140,7 +156,7 @@ mod tests {
     fn test_submit_correct_answer() {
         let mut game = Game::new(600.0, 800.0);
         game.cards = vec![
-            Card { front: "Q".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false },
+            Card { front: "Q".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
         ];
         assert_eq!(game.get_score(), 0);
         assert!(game.submit_answer("Answer"));
@@ -153,7 +169,7 @@ mod tests {
     fn test_submit_incorrect_answer() {
         let mut game = Game::new(600.0, 800.0);
         game.cards = vec![
-            Card { front: "Q".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false },
+            Card { front: "Q".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
         ];
         assert_eq!(game.get_score(), 0);
         assert!(!game.submit_answer("Wrong"));
@@ -166,7 +182,7 @@ mod tests {
     fn test_submit_answer_normalization() {
         let mut game = Game::new(600.0, 800.0);
         game.cards = vec![
-            Card { front: "Q".to_string(), back: "How are you?".to_string(), x: 0.0, y: 0.0, flipped: false },
+            Card { front: "Q".to_string(), back: "How are you?".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
         ];
         assert!(game.submit_answer("how are you"));
         let cards: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
@@ -177,9 +193,9 @@ mod tests {
     fn test_submit_answer_resolves_multiple_cards() {
         let mut game = Game::new(600.0, 800.0);
         game.cards = vec![
-            Card { front: "Q1".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false },
-            Card { front: "Q2".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false },
-            Card { front: "Q3".to_string(), back: "Different".to_string(), x: 0.0, y: 0.0, flipped: false },
+            Card { front: "Q1".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
+            Card { front: "Q2".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
+            Card { front: "Q3".to_string(), back: "Different".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
         ];
         assert_eq!(game.get_score(), 0);
         assert!(game.submit_answer("answer"));
@@ -190,11 +206,11 @@ mod tests {
     }
     
     #[wasm_bindgen_test]
-    fn test_tick_moves_and_flips_card() {
+    fn test_tick_moves_stops_flips_and_vanishes() {
         let height = 800.0;
         let mut game = Game::new(600.0, height);
         game.cards = vec![
-            Card { front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false },
+            Card { front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
         ];
 
         // Tick to just before the flip threshold
@@ -204,13 +220,20 @@ mod tests {
         
         game.tick(time_to_flip - 0.1);
         let cards_before_flip: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
+        assert_eq!(cards_before_flip.len(), 1);
         assert!(!cards_before_flip[0].flipped);
         assert!(cards_before_flip[0].y < flip_y);
 
         // Tick past the flip threshold
         game.tick(0.2);
         let cards_after_flip: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
+        assert_eq!(cards_after_flip.len(), 1);
         assert!(cards_after_flip[0].flipped);
-        assert!(cards_after_flip[0].y >= flip_y);
+        assert_eq!(cards_after_flip[0].y, flip_y);
+
+        // Tick for another second, card should be gone
+        game.tick(1.0);
+        let cards_after_vanish: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
+        assert_eq!(cards_after_vanish.len(), 0);
     }
 }
