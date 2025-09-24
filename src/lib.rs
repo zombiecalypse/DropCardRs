@@ -1,6 +1,8 @@
 use wasm_bindgen::prelude::*;
 use serde::{Serialize, Deserialize};
 
+mod cards;
+
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = console)]
@@ -133,13 +135,7 @@ impl Game {
     }
 
     fn get_random_card_data(&mut self) -> (String, String) {
-        let data = vec![
-            ("Bore da", "Good morning"),
-            ("Prynhawn da", "Good afternoon"),
-            ("Nos da", "Good night"),
-            ("Sut mae?", "How are you?"),
-            ("Croeso", "Welcome"),
-        ];
+        let data = cards::CARD_DATA;
         // Simple LCG for deterministic randomness
         self.rng_seed = self.rng_seed.wrapping_mul(1664525).wrapping_add(1013904223);
         let random_val = self.rng_seed as f64 / u32::MAX as f64;
