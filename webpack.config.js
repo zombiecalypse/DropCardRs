@@ -28,8 +28,5 @@ module.exports = (env, argv) => {
     },
     mode: 'development',
     devtool: 'source-map',
-    devServer: {
-      hot: false
-    }
   };
 };
