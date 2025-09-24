@@ -136,6 +136,28 @@ impl Game {
         self.score
     }
 
+    pub fn get_health(&self) -> i32 {
+        self.health
+    }
+
+    pub fn get_max_health(&self) -> i32 {
+        self.max_health
+    }
+
+    pub fn is_game_over(&self) -> bool {
+        self.game_over
+    }
+
+    pub fn restart(&mut self) {
+        self.cards.clear();
+        self.score = 0;
+        self.health = 3;
+        self.score_since_last_heart = 0;
+        self.game_over = false;
+        self.time_since_last_card = 0.0;
+        self.spawn_card();
+    }
+
     pub fn submit_answer(&mut self, answer: &str) -> bool {
         if self.game_over {
             return false;
