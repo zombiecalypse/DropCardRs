@@ -14,18 +14,30 @@ import('../pkg/flashcards.js').then(module => {
 
     const pauseScreen = document.createElement('div');
     pauseScreen.id = 'pause-screen';
-    pauseScreen.className = 'overlay hidden';
+    pauseScreen.className = 'overlay';
     pauseScreen.innerHTML = '<h1>Paused</h1><p>Press Enter to continue</p>';
+    Object.assign(pauseScreen.style, {
+        position: 'absolute',
+        top: '0',
+        left: '0',
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        color: 'white',
+        zIndex: '20',
+        display: 'none',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'column',
+    });
     gameBoard.appendChild(pauseScreen);
-    pauseScreen.style.zIndex = "10";
-    pauseScreen.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
 
     answerInput.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
             if (game.is_game_over()) {
                 game.restart();
                 gameOverScreen.classList.add('hidden');
-                pauseScreen.classList.add('hidden');
+                pauseScreen.style.display = 'none';
                 answerInput.focus();
             } else if (game.is_paused()) {
                 game.resume();
@@ -112,9 +124,9 @@ import('../pkg/flashcards.js').then(module => {
 
         // Pause
         if (game.is_paused()) {
-            pauseScreen.classList.remove('hidden');
+            pauseScreen.style.display = 'flex';
         } else {
-            pauseScreen.classList.add('hidden');
+            pauseScreen.style.display = 'none';
         }
     }
 
