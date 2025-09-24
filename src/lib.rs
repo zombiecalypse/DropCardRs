@@ -76,7 +76,7 @@ impl Game {
         self.cards.push(Card {
             front,
             back,
-            x: (Math::random() * (self.width - 100.0)), // 100 is card width
+            x: (Math::random() * (self.width - 150.0)), // 150 is card width
             y: 0.0,
             flipped: false,
         });
