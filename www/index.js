@@ -12,12 +12,21 @@ import('../pkg/flashcards.js').then(module => {
     const gameOverScreen = document.getElementById('game-over-screen');
     const answerInput = document.getElementById('answer-input');
 
+    const pauseScreen = document.createElement('div');
+    pauseScreen.id = 'pause-screen';
+    pauseScreen.className = 'overlay hidden';
+    pauseScreen.innerHTML = '<h1>Paused</h1><p>Press Enter to continue</p>';
+    gameBoard.appendChild(pauseScreen);
+
     answerInput.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
             if (game.is_game_over()) {
                 game.restart();
                 gameOverScreen.classList.add('hidden');
+                pauseScreen.classList.add('hidden');
                 answerInput.focus();
+            } else if (game.is_paused()) {
+                game.resume();
             } else {
                 const answer = answerInput.value;
                 if (answer) {
@@ -26,6 +35,19 @@ import('../pkg/flashcards.js').then(module => {
                     }
                 }
             }
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Tab' && !game.is_game_over()) {
+            event.preventDefault();
+            game.pause();
+        }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && !game.is_game_over()) {
+            game.pause();
         }
     });
 
@@ -84,6 +106,13 @@ import('../pkg/flashcards.js').then(module => {
         // Game over
         if (game.is_game_over()) {
             gameOverScreen.classList.remove('hidden');
+        }
+
+        // Pause
+        if (game.is_paused()) {
+            pauseScreen.classList.remove('hidden');
+        } else {
+            pauseScreen.classList.add('hidden');
         }
     }
 

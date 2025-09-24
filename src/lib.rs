@@ -30,6 +30,7 @@ pub struct Game {
     max_health: i32,
     score_since_last_heart: i32,
     game_over: bool,
+    paused: bool,
 }
 
 fn normalize_string(s: &str) -> String {
@@ -56,13 +57,14 @@ impl Game {
             max_health: 5,
             score_since_last_heart: 0,
             game_over: false,
+            paused: false,
         };
         game.spawn_card();
         game
     }
 
     pub fn tick(&mut self, dt: f64) {
-        if self.game_over {
+        if self.game_over || self.paused {
             return;
         }
 
@@ -148,19 +150,32 @@ impl Game {
         self.game_over
     }
 
+    pub fn pause(&mut self) {
+        self.paused = true;
+    }
+
+    pub fn resume(&mut self) {
+        self.paused = false;
+    }
+
+    pub fn is_paused(&self) -> bool {
+        self.paused
+    }
+
     pub fn restart(&mut self) {
         self.cards.clear();
         self.score = 0;
         self.health = 3;
         self.score_since_last_heart = 0;
         self.game_over = false;
+        self.paused = false;
         self.time_since_last_card = 0.0;
         self.card_spawn_interval = 3.0;
         self.spawn_card();
     }
 
     pub fn submit_answer(&mut self, answer: &str) -> bool {
-        if self.game_over {
+        if self.game_over || self.paused {
             return false;
         }
         let normalized_answer = normalize_string(answer);
