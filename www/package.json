@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "webpack --config webpack.config.js",
-    "start": "npx webpack serve"
+    "serve": "npx webpack serve"
   },
   "dependencies": {},
   "devDependencies": {
