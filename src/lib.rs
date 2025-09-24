@@ -393,7 +393,7 @@ mod tests {
         assert!(game.submit_answer("answer"));
         let cards: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
         assert_eq!(cards.len(), 1);
-        assert_eq!(cards[0].back, "Different");
+        assert_eq!(cards[0].id, 2);
         assert_eq!(game.get_score(), 2);
     }
     
@@ -517,7 +517,7 @@ mod tests {
     }
 
     #[wasm_bindgen_test]
-    fn test_card_spawn_interval_decreases_with_score() {
+    fn test_difficulty_increases_with_score() {
         let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal);
         game.cards = vec![
             Card { id: 0, front: "Q1".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
@@ -527,9 +527,36 @@ mod tests {
             Card { id: 4, front: "Q5".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
         ];
         assert_eq!(game.card_spawn_interval, 3.0);
+        assert_eq!(game.card_speed, 50.0);
+
         game.submit_answer("A");
+
         assert_eq!(game.get_score(), 5);
         assert_eq!(game.card_spawn_interval, 2.75);
+        assert_eq!(game.card_speed, 50.0 + (5.0 * 2.0));
+    }
+
+    #[wasm_bindgen_test]
+    fn test_deck_replenishes_on_unlock() {
+        let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal);
+        
+        // Initial state: 10 cards unlocked, deck has 30 cards, one is spawned
+        assert_eq!(game.unlocked_cards_count, 10);
+        assert_eq!(game.card_deck.len(), 10 * 3 - 1);
+
+        // Score enough points to unlock more cards (score 10)
+        game.score = 9; // set score to 9 to be just before the threshold
+        game.cards = vec![
+            Card { id: game.next_card_id, front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
+        ];
+        game.submit_answer("A");
+        assert_eq!(game.get_score(), 10);
+
+        // After scoring, new cards are unlocked, and deck is replenished.
+        // 15 cards should be unlocked (10 initial + 5 new).
+        // Deck should have 15 * 3 = 45 cards.
+        assert_eq!(game.unlocked_cards_count, 15);
+        assert_eq!(game.card_deck.len(), 15 * 3);
     }
 
     #[wasm_bindgen_test]
