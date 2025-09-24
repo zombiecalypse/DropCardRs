@@ -22,32 +22,43 @@ body {
     background: #fff;
 }
 
-#ui {
+#top-ui {
     display: flex;
     justify-content: space-between;
     padding: 10px;
     background: #ddd;
 }
 
+#bottom-ui {
+    padding: 10px;
+    background: #ddd;
+}
+
 #answer-input {
-    width: 80%;
+    width: 100%;
     padding: 5px;
+    box-sizing: border-box;
 }
 
 #score {
     font-size: 1.2em;
 }
 
+#health {
+    font-size: 1.2em;
+    letter-spacing: 2px;
+}
+
 .card {
     position: absolute;
-    width: 100px;
+    width: 150px;
     height: 50px;
     border: 1px solid #333;
     background: lightblue;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 24px;
+    font-size: 18px;
     user-select: none;
     transform-style: preserve-3d;
     transition: transform 0.6s;
@@ -65,6 +76,9 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    text-align: center;
+    padding: 5px;
+    box-sizing: border-box;
 }
 
 .card .front {
@@ -74,4 +88,23 @@ body {
 .card .back {
     background: lightcoral;
     transform: rotateX(180deg);
+}
+
+#game-over-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+
+#game-over-screen.hidden {
+    display: none;
 }
