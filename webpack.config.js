@@ -27,6 +27,9 @@ module.exports = (env, argv) => {
       asyncWebAssembly: true
     },
     mode: 'development',
-    devtool: 'source-map'
+    devtool: 'source-map',
+    devServer: {
+      hot: false
+    }
   };
 };
