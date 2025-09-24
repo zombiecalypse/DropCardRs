@@ -1,1 +1,20 @@
 .aider*
+# Rust build artifacts
+/target
+
+# Wasm-pack output
+/pkg
+
+# Node.js dependencies and build output
+/node_modules
+/dist
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE configuration
+.vscode/
+.idea/
+
+# OS-generated files
+.DS_Store
