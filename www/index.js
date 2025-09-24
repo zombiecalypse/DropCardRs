@@ -1,13 +1,9 @@
-// --- Robust Cleanup for HMR and Dev Server double-load ---
-// If a cleanup function from a previous run exists, it means we're in a
-// hot-reload or double-load scenario. Run it to tear down the old instance.
-if (window.flashCardGameCleanup) {
-    console.log("Previous game instance found. Running cleanup.");
-    window.flashCardGameCleanup();
-}
-// ---------------------------------------------------------
+if (window.isFlashCardGameRunning) {
+    console.warn("Skipping duplicate game initialization.");
+} else {
+    window.isFlashCardGameRunning = true;
 
-import('../pkg/flashcards.js').then(module => {
+    import('../pkg/flashcards.js').then(module => {
     const { Game } = module;
 
     const style = document.createElement('style');
@@ -77,11 +73,8 @@ import('../pkg/flashcards.js').then(module => {
                 game.resume();
             } else {
                 const answer = answerInput.value;
-                console.log(`[Game ${gameId}] Enter pressed. Answer: "${answer}"`);
                 if (answer) {
-                    const correctly_answered = game.submit_answer(answer);
-                    console.log(`[Game ${gameId}] submit_answer returned: ${correctly_answered}`);
-                    if (!correctly_answered) {
+                    if (!game.submit_answer(answer)) {
                         gameBoard.classList.add('shake');
                         setTimeout(() => {
                             gameBoard.classList.remove('shake');
@@ -125,12 +118,6 @@ import('../pkg/flashcards.js').then(module => {
     function render(timestamp) {
         cardsContainer.innerHTML = '';
         const cards = game.get_cards();
-
-        if (timestamp - lastLogTime > 1000) {
-            const card_fronts = cards.map(c => c.front).join(', ');
-            console.log(`[Game ${gameId}] Rendering cards: [${card_fronts}]`);
-            lastLogTime = timestamp;
-        }
 
         for (const card of cards) {
             const cardElement = document.createElement('div');
@@ -183,29 +170,11 @@ import('../pkg/flashcards.js').then(module => {
 
     animationFrameId = requestAnimationFrame(gameLoop);
 
-    // Define and attach the cleanup function to the window object. This function
-    // captures the current game's state and handlers in a closure, allowing
-    // the *next* script execution to clean up this one.
-    window.flashCardGameCleanup = () => {
-        console.log(`[Game ${gameId}] Cleaning up instance.`);
-        cancelAnimationFrame(animationFrameId);
-        answerInput.removeEventListener('keydown', answerHandler);
-        document.removeEventListener('keydown', tabKeyHandler);
-        document.removeEventListener('visibilitychange', visibilityChangeHandler);
-
-        // Also clear the board to prevent visual artifacts
-        const pauseScreen = document.getElementById('pause-screen');
-        if (pauseScreen) pauseScreen.remove();
-        // Check for cardsContainer existence before manipulating
-        if (cardsContainer) cardsContainer.innerHTML = '';
-    };
-
     if (module.hot) {
         module.hot.dispose(() => {
-            if (window.flashCardGameCleanup) {
-                console.log(`[Game ${gameId}] HMR dispose. Cleaning up.`);
-                window.flashCardGameCleanup();
-            }
+            // A full reload is the most robust way to handle HMR
+            window.location.reload();
         });
     }
-}).catch(console.error);
+    }).catch(console.error);
+}

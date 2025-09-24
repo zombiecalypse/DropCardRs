@@ -103,13 +103,6 @@ impl Game {
         }
 
         // Remove cards that have been flipped for over 1 second
-        for card in self.cards.iter() {
-            if let Some(time_flipped) = card.time_since_flipped {
-                if time_flipped >= 1.0 {
-                    log(&format!("[Game {}] Card '{}' will be removed (flipped timeout).", self.game_id, card.front));
-                }
-            }
-        }
         self.cards.retain(|card| {
             if let Some(time_flipped) = card.time_since_flipped {
                 time_flipped < 1.0
@@ -206,21 +199,8 @@ impl Game {
         if self.game_over || self.paused {
             return false;
         }
-        log(&format!("[Game {}] submit_answer called with: '{}'", self.game_id, answer));
         let normalized_answer = normalize_string(answer);
-        log(&format!("[Game {}] Normalized answer: '{}'", self.game_id, normalized_answer));
         let initial_card_count = self.cards.len();
-
-        log(&format!("[Game {}] Cards before removal ({}):", self.game_id, initial_card_count));
-        for card in &self.cards {
-            let card_back_normalized = normalize_string(&card.back);
-            let is_match = card_back_normalized == normalized_answer;
-            let should_remove = !card.flipped && is_match;
-            log(&format!(
-                "  - Checking card '{}' | norm_back: '{}' | is_match: {} | should_remove: {}",
-                card.front, card_back_normalized, is_match, should_remove
-            ));
-        }
 
         let cards_to_keep: Vec<Card> = self.cards
             .iter()
@@ -232,13 +212,7 @@ impl Game {
 
         let removed_count = initial_card_count - self.cards.len();
         
-        log(&format!("[Game {}] Cards after removal ({}):", self.game_id, self.cards.len()));
-        for card in &self.cards {
-            log(&format!("  - '{}'", card.front));
-        }
-
         if removed_count > 0 {
-            log(&format!("[Game {}] Correct answer. Removed {} cards.", self.game_id, removed_count));
             let new_points = removed_count as i32;
             self.score += new_points;
             self.score_since_last_heart += new_points;
@@ -252,7 +226,6 @@ impl Game {
             }
             true
         } else {
-            log(&format!("[Game {}] Incorrect answer.", self.game_id));
             false
         }
     }
