@@ -61,7 +61,7 @@ impl Game {
             score_since_last_heart: 0,
             game_over: false,
             paused: false,
-            rng_seed: 12345, // A fixed seed for deterministic randomness
+            rng_seed: seed, // Use the provided seed for randomness
             game_id,
         };
         game.spawn_card();
@@ -191,7 +191,7 @@ impl Game {
         self.paused = false;
         self.time_since_last_card = 0.0;
         self.card_spawn_interval = 3.0;
-        self.rng_seed = 12345; // Reset seed
+        self.rng_seed = self.game_id; // Reset seed to be deterministic for this game instance
         self.spawn_card();
     }
 
