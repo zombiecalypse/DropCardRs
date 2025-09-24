@@ -3,7 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require("copy-webpack-plugin");
 
 module.exports = {
-  entry: './index.js',
+  entry: './www/index.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'bootstrap.js',
@@ -11,11 +11,11 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: 'index.html'
+      template: 'www/index.html'
     }),
     new CopyPlugin({
       patterns: [
-        { from: "style.css", to: "style.css" },
+        { from: "www/style.css", to: "style.css" },
       ],
     }),
   ],

@@ -46,7 +46,6 @@ The game will be available at [https://zombiecalypse.github.io/DropCardRs/](http
 
 To deploy manually, you can run:
 ```bash
-cd www
 npm run deploy
 ```
 This will build the project and push the `dist` directory to the `gh-pages` branch. You will need to configure your repository on GitHub to serve from the `gh-pages` branch.
