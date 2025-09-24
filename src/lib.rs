@@ -352,4 +352,54 @@ mod tests {
         let cards_after_restart: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
         assert_eq!(cards_after_restart.len(), 1); // one new card spawned
     }
+
+    #[wasm_bindgen_test]
+    fn test_pause_and_resume() {
+        let mut game = Game::new(600.0, 800.0);
+        game.cards = vec![
+            Card { front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 10.0, flipped: false, time_since_flipped: None },
+        ];
+
+        game.pause();
+        assert!(game.is_paused());
+
+        // Tick should not move cards when paused
+        game.tick(1.0);
+        let cards_paused: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
+        assert_eq!(cards_paused[0].y, 10.0);
+
+        // Submitting answers should do nothing when paused
+        assert!(!game.submit_answer("A"));
+        let cards_paused_submit: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
+        assert_eq!(cards_paused_submit.len(), 1);
+
+        game.resume();
+        assert!(!game.is_paused());
+
+        // Tick should work again
+        game.tick(1.0);
+        let cards_resumed: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
+        assert!(cards_resumed[0].y > 10.0);
+
+        // Submitting answers should work again
+        assert!(game.submit_answer("A"));
+        let cards_resumed_submit: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
+        assert_eq!(cards_resumed_submit.len(), 0);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_card_spawn_interval_decreases_with_score() {
+        let mut game = Game::new(600.0, 800.0);
+        game.cards = vec![
+            Card { front: "Q1".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
+            Card { front: "Q2".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
+            Card { front: "Q3".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
+            Card { front: "Q4".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
+            Card { front: "Q5".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
+        ];
+        assert_eq!(game.card_spawn_interval, 3.0);
+        game.submit_answer("A");
+        assert_eq!(game.get_score(), 5);
+        assert_eq!(game.card_spawn_interval, 2.75);
+    }
 }
