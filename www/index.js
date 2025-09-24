@@ -1,6 +1,20 @@
 import('../pkg/flashcards.js').then(module => {
     const { Game } = module;
 
+    const style = document.createElement('style');
+    style.textContent = `
+        .shake {
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translateX(-1px); }
+            20%, 80% { transform: translateX(2px); }
+            30%, 50%, 70% { transform: translateX(-4px); }
+            40%, 60% { transform: translateX(4px); }
+        }
+    `;
+    document.head.appendChild(style);
+
     const GAME_WIDTH = 600;
     const GAME_HEIGHT = 800;
 
@@ -44,9 +58,13 @@ import('../pkg/flashcards.js').then(module => {
             } else {
                 const answer = answerInput.value;
                 if (answer) {
-                    if (game.submit_answer(answer)) {
-                        answerInput.value = '';
+                    if (!game.submit_answer(answer)) {
+                        gameBoard.classList.add('shake');
+                        setTimeout(() => {
+                            gameBoard.classList.remove('shake');
+                        }, 500);
                     }
+                    answerInput.value = '';
                 }
             }
         }
