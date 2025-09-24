@@ -30,6 +30,8 @@ pub struct Card {
 #[wasm_bindgen]
 pub struct Game {
     cards: Vec<Card>,
+    card_deck: Vec<(String, String)>,
+    unlocked_cards_count: usize,
     width: f64,
     height: f64,
     score: i32,
@@ -69,6 +71,8 @@ impl Game {
 
         let mut game = Game {
             cards: vec![],
+            card_deck: vec![],
+            unlocked_cards_count: 0,
             width,
             height,
             score: 0,
@@ -134,49 +138,65 @@ impl Game {
     }
 
     fn spawn_card(&mut self) {
-        let (front, back) = self.get_random_card_data();
-        
-        // Another random number for x position
-        self.rng_seed = self.rng_seed.wrapping_mul(1664525).wrapping_add(1013904223);
-        let random_val = self.rng_seed as f64 / u32::MAX as f64;
+        if self.card_deck.is_empty() {
+            self.replenish_deck();
+        }
 
-        self.cards.push(Card {
-            front,
-            back,
-            x: (random_val * (self.width - 150.0)), // 150 is card width
-            y: 0.0,
-            flipped: false,
-            time_since_flipped: None,
-        });
+        if let Some((raw_front, raw_back)) = self.card_deck.pop() {
+            let should_reverse = match self.mode {
+                GameMode::Reverse => true,
+                GameMode::Both => {
+                    // another random number to decide if we swap
+                    self.rng_seed = self.rng_seed.wrapping_mul(1664525).wrapping_add(1013904223);
+                    let random_val_for_swap = self.rng_seed as f64 / u32::MAX as f64;
+                    random_val_for_swap > 0.5
+                }
+                GameMode::Normal => false,
+            };
+    
+            let (front, back) = if should_reverse {
+                (raw_back, raw_front)
+            } else {
+                (raw_front, raw_back)
+            };
+            
+            // Another random number for x position
+            self.rng_seed = self.rng_seed.wrapping_mul(1664525).wrapping_add(1013904223);
+            let random_val = self.rng_seed as f64 / u32::MAX as f64;
+    
+            self.cards.push(Card {
+                front,
+                back,
+                x: (random_val * (self.width - 150.0)), // 150 is card width
+                y: 0.0,
+                flipped: false,
+                time_since_flipped: None,
+            });
+        }
     }
 
-    fn get_random_card_data(&mut self) -> (String, String) {
+    fn replenish_deck(&mut self) {
         let num_available_cards = (10 + (self.score / 10) * 5) as usize;
         let all_cards = cards::CARD_DATA;
         let available_cards = &all_cards[..num_available_cards.min(all_cards.len())];
+        self.unlocked_cards_count = available_cards.len();
 
-        // Simple LCG for deterministic randomness
-        self.rng_seed = self.rng_seed.wrapping_mul(1664525).wrapping_add(1013904223);
-        let random_val = self.rng_seed as f64 / u32::MAX as f64;
-        let index = (random_val * available_cards.len() as f64).floor() as usize;
-        let (front, back) = available_cards[index];
-
-        let should_reverse = match self.mode {
-            GameMode::Reverse => true,
-            GameMode::Both => {
-                // another random number to decide if we swap
-                self.rng_seed = self.rng_seed.wrapping_mul(1664525).wrapping_add(1013904223);
-                let random_val_for_swap = self.rng_seed as f64 / u32::MAX as f64;
-                random_val_for_swap > 0.5
+        let mut new_deck = Vec::new();
+        for _ in 0..3 { // Add each card 3 times
+            for &(front, back) in available_cards {
+                new_deck.push((front.to_string(), back.to_string()));
             }
-            GameMode::Normal => false,
-        };
-
-        if should_reverse {
-            (back.to_string(), front.to_string())
-        } else {
-            (front.to_string(), back.to_string())
         }
+
+        // Shuffle the deck using Fisher-Yates
+        for i in (1..new_deck.len()).rev() {
+            self.rng_seed = self.rng_seed.wrapping_mul(1664525).wrapping_add(1013904223);
+            let random_val = self.rng_seed as f64 / u32::MAX as f64;
+            let j = (random_val * (i + 1) as f64).floor() as usize;
+            new_deck.swap(i, j);
+        }
+
+        self.card_deck = new_deck;
     }
 
     pub fn get_cards(&self) -> JsValue {
@@ -247,6 +267,8 @@ impl Game {
 
     pub fn restart(&mut self) {
         self.cards.clear();
+        self.card_deck.clear();
+        self.unlocked_cards_count = 0;
         self.score = 0;
         self.health = 3;
         self.score_since_last_heart = 0;
@@ -280,6 +302,12 @@ impl Game {
             let new_points = removed_count as i32;
             self.score += new_points;
             self.score_since_last_heart += new_points;
+
+            // Check if new cards were unlocked and replenish deck if so
+            let num_unlocked_cards = ((10 + (self.score / 10) * 5) as usize).min(cards::CARD_DATA.len());
+            if num_unlocked_cards > self.unlocked_cards_count {
+                self.replenish_deck();
+            }
 
             self.card_spawn_interval = (3.0 - (self.score / 5) as f64 * 0.25).max(0.5);
             self.card_speed = 50.0 + (self.score as f64 * 2.0);
