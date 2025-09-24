@@ -187,7 +187,14 @@ impl Game {
         let initial_card_count = self.cards.len();
 
         self.cards.retain(|card| {
-            !(!card.flipped && normalize_string(&card.back) == normalized_answer)
+            let card_back_normalized = normalize_string(&card.back);
+            let is_match = card_back_normalized == normalized_answer;
+            let should_remove = !card.flipped && is_match;
+            log(&format!(
+                "Checking card '{}' | norm_back: '{}' | norm_answer: '{}' | is_match: {} | should_remove: {}",
+                card.front, card_back_normalized, normalized_answer, is_match, should_remove
+            ));
+            !should_remove
         });
 
         let removed_count = initial_card_count - self.cards.len();
