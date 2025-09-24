@@ -2,9 +2,12 @@
   "name": "flashcards-www",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://zombiecalypse.github.io/DropCardRs",
   "scripts": {
-    "build": "webpack --config webpack.config.js",
-    "serve": "npx webpack serve --open"
+    "build": "webpack --config webpack.config.js --mode production",
+    "serve": "npx webpack serve --open",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {},
   "devDependencies": {
@@ -12,6 +15,7 @@
     "webpack-cli": "^5.0.1",
     "webpack-dev-server": "^4.11.1",
     "html-webpack-plugin": "^5.5.0",
-    "copy-webpack-plugin": "^11.0.0"
+    "copy-webpack-plugin": "^11.0.0",
+    "gh-pages": "^5.0.0"
   }
 }

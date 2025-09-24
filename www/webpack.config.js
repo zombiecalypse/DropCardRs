@@ -3,18 +3,19 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require("copy-webpack-plugin");
 
 module.exports = {
-  entry: './www/index.js',
+  entry: './index.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'bootstrap.js',
+    publicPath: '/DropCardRs/',
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: 'www/index.html'
+      template: 'index.html'
     }),
     new CopyPlugin({
       patterns: [
-        { from: "www/style.css", to: "style.css" },
+        { from: "style.css", to: "style.css" },
       ],
     }),
   ],

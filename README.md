@@ -37,3 +37,16 @@ To run the test suite for the Rust game logic, you'll need a webdriver installed
 ```bash
 wasm-pack test --headless --firefox
 ```
+
+## Deployment
+
+This project is configured for automated deployment to GitHub Pages. When changes are pushed to the `main` branch, a GitHub Action will build the project and deploy it.
+
+The game will be available at [https://zombiecalypse.github.io/DropCardRs/](https://zombiecalypse.github.io/DropCardRs/).
+
+To deploy manually, you can run:
+```bash
+cd www
+npm run deploy
+```
+This will build the project and push the `dist` directory to the `gh-pages` branch. You will need to configure your repository on GitHub to serve from the `gh-pages` branch.
