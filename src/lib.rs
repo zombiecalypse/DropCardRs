@@ -1,6 +1,5 @@
 use wasm_bindgen::prelude::*;
 use serde::{Serialize, Deserialize};
-use js_sys::Date;
 
 #[wasm_bindgen]
 extern "C" {
@@ -47,8 +46,7 @@ fn normalize_string(s: &str) -> String {
 
 #[wasm_bindgen]
 impl Game {
-    pub fn new(width: f64, height: f64) -> Game {
-        let seed = Date::now() as u32;
+    pub fn new(width: f64, height: f64, seed: u32) -> Game {
         let game_id = seed.wrapping_mul(1664525).wrapping_add(1013904223);
 
         let mut game = Game {
@@ -276,7 +274,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_submit_correct_answer() {
-        let mut game = Game::new(600.0, 800.0);
+        let mut game = Game::new(600.0, 800.0, 0);
         game.cards = vec![
             Card { front: "Q".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
         ];
@@ -289,7 +287,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_submit_incorrect_answer() {
-        let mut game = Game::new(600.0, 800.0);
+        let mut game = Game::new(600.0, 800.0, 0);
         game.cards = vec![
             Card { front: "Q".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
         ];
@@ -302,7 +300,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_submit_answer_normalization() {
-        let mut game = Game::new(600.0, 800.0);
+        let mut game = Game::new(600.0, 800.0, 0);
         game.cards = vec![
             Card { front: "Q".to_string(), back: "How are you?".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
         ];
@@ -313,7 +311,7 @@ mod tests {
     
     #[wasm_bindgen_test]
     fn test_submit_answer_resolves_multiple_cards() {
-        let mut game = Game::new(600.0, 800.0);
+        let mut game = Game::new(600.0, 800.0, 0);
         game.cards = vec![
             Card { front: "Q1".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
             Card { front: "Q2".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
@@ -330,7 +328,7 @@ mod tests {
     #[wasm_bindgen_test]
     fn test_tick_moves_stops_flips_and_vanishes() {
         let height = 800.0;
-        let mut game = Game::new(600.0, height);
+        let mut game = Game::new(600.0, height, 0);
         game.cards = vec![
             Card { front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
         ];
@@ -364,7 +362,7 @@ mod tests {
     
     #[wasm_bindgen_test]
     fn test_health_gain_on_score() {
-        let mut game = Game::new(600.0, 800.0);
+        let mut game = Game::new(600.0, 800.0, 0);
         game.health = 1; // set health low to test gain
         game.cards = vec![
             Card { front: "Q1".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
@@ -382,7 +380,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_game_over_and_restart() {
-        let mut game = Game::new(600.0, 800.0);
+        let mut game = Game::new(600.0, 800.0, 0);
         game.health = 1;
         game.cards = vec![
             Card { front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
@@ -414,7 +412,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_pause_and_resume() {
-        let mut game = Game::new(600.0, 800.0);
+        let mut game = Game::new(600.0, 800.0, 0);
         game.cards = vec![
             Card { front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 10.0, flipped: false, time_since_flipped: None },
         ];
@@ -448,7 +446,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_card_spawn_interval_decreases_with_score() {
-        let mut game = Game::new(600.0, 800.0);
+        let mut game = Game::new(600.0, 800.0, 0);
         game.cards = vec![
             Card { front: "Q1".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
             Card { front: "Q2".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },

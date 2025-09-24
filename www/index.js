@@ -27,7 +27,8 @@ import('../pkg/flashcards.js').then(module => {
     const GAME_WIDTH = 600;
     const GAME_HEIGHT = 800;
 
-    const game = Game.new(GAME_WIDTH, GAME_HEIGHT);
+    const seed = Math.floor(Math.random() * 2**32);
+    const game = Game.new(GAME_WIDTH, GAME_HEIGHT, seed);
     const gameId = game.get_id();
     console.log(`[Game ${gameId}] Initialized.`);
     const gameBoard = document.getElementById('game-board');
