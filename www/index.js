@@ -1,44 +1,3 @@
-// --- HMR and Live Reload Cleanup ---
-// We store animation frame IDs and event handlers on the global window object.
-// This allows us to cancel them when Webpack's dev server re-runs the script,
-// preventing duplicate game loops and event listeners.
-if (window.dropCardCleanup) {
-    window.dropCardCleanup();
-}
-
-window.dropCardCleanup = function() {
-    if (window.dropCardAnimationId) {
-        cancelAnimationFrame(window.dropCardAnimationId);
-        window.dropCardAnimationId = null;
-    }
-    if (window.dropCardAnswerHandler) {
-        const answerInput = document.getElementById('answer-input');
-        if (answerInput) {
-            answerInput.removeEventListener('keydown', window.dropCardAnswerHandler);
-        }
-        window.dropCardAnswerHandler = null;
-    }
-    if (window.dropCardTabHandler) {
-        document.removeEventListener('keydown', window.dropCardTabHandler);
-        window.dropCardTabHandler = null;
-    }
-    if (window.dropCardVisibilityHandler) {
-        document.removeEventListener('visibilitychange', window.dropCardVisibilityHandler);
-        window.dropCardVisibilityHandler = null;
-    }
-    // Clear the board to remove old cards and pause screen
-    const gameBoard = document.getElementById('game-board');
-    if (gameBoard) {
-        const cardsContainer = document.getElementById('cards-container');
-        if (cardsContainer) cardsContainer.innerHTML = '';
-        const pauseScreen = document.getElementById('pause-screen');
-        if (pauseScreen) pauseScreen.remove();
-    }
-};
-
-// Run cleanup immediately to clear artifacts from any previous script execution
-window.dropCardCleanup();
-// ------------------------------------
 
 import('../pkg/flashcards.js').then(module => {
     const { Game } = module;
@@ -70,6 +29,13 @@ import('../pkg/flashcards.js').then(module => {
     const gameOverScreen = document.getElementById('game-over-screen');
     const answerInput = document.getElementById('answer-input');
 
+    // --- State for cleanup ---
+    let animationFrameId = null;
+    let answerHandler = null;
+    let tabKeyHandler = null;
+    let visibilityChangeHandler = null;
+    // ---
+
     const pauseScreen = document.createElement('div');
     pauseScreen.id = 'pause-screen';
     pauseScreen.className = 'overlay';
@@ -90,7 +56,7 @@ import('../pkg/flashcards.js').then(module => {
     });
     gameBoard.appendChild(pauseScreen);
 
-    window.dropCardAnswerHandler = (event) => {
+    answerHandler = (event) => {
         if (event.key === 'Enter') {
             event.preventDefault();
             if (game.is_game_over()) {
@@ -117,22 +83,22 @@ import('../pkg/flashcards.js').then(module => {
             }
         }
     };
-    answerInput.addEventListener('keydown', window.dropCardAnswerHandler);
+    answerInput.addEventListener('keydown', answerHandler);
 
-    window.dropCardTabHandler = (event) => {
+    tabKeyHandler = (event) => {
         if (event.key === 'Tab' && !game.is_game_over()) {
             event.preventDefault();
             game.pause();
         }
     };
-    document.addEventListener('keydown', window.dropCardTabHandler);
+    document.addEventListener('keydown', tabKeyHandler);
 
-    window.dropCardVisibilityHandler = () => {
+    visibilityChangeHandler = () => {
         if (document.hidden && !game.is_game_over()) {
             game.pause();
         }
     };
-    document.addEventListener('visibilitychange', window.dropCardVisibilityHandler);
+    document.addEventListener('visibilitychange', visibilityChangeHandler);
 
     let lastTime = 0;
     let lastLogTime = 0;
@@ -144,7 +110,7 @@ import('../pkg/flashcards.js').then(module => {
 
         render(timestamp);
 
-        window.dropCardAnimationId = requestAnimationFrame(gameLoop);
+        animationFrameId = requestAnimationFrame(gameLoop);
     }
 
     function render(timestamp) {
@@ -206,5 +172,27 @@ import('../pkg/flashcards.js').then(module => {
         }
     }
 
-    window.dropCardAnimationId = requestAnimationFrame(gameLoop);
+    animationFrameId = requestAnimationFrame(gameLoop);
+
+    if (module.hot) {
+        module.hot.dispose(() => {
+            console.log(`[Game ${gameId}] HMR dispose. Cleaning up.`);
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            if (answerHandler) {
+                answerInput.removeEventListener('keydown', answerHandler);
+            }
+            if (tabKeyHandler) {
+                document.removeEventListener('keydown', tabKeyHandler);
+            }
+            if (visibilityChangeHandler) {
+                document.removeEventListener('visibilitychange', visibilityChangeHandler);
+            }
+            // Clear the board to remove old cards and pause screen
+            const pauseScreen = document.getElementById('pause-screen');
+            if (pauseScreen) pauseScreen.remove();
+            cardsContainer.innerHTML = '';
+        });
+    }
 }).catch(console.error);
