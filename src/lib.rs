@@ -155,6 +155,7 @@ impl Game {
         self.score_since_last_heart = 0;
         self.game_over = false;
         self.time_since_last_card = 0.0;
+        self.card_spawn_interval = 3.0;
         self.spawn_card();
     }
 
@@ -174,6 +175,8 @@ impl Game {
             let new_points = removed_count as i32;
             self.score += new_points;
             self.score_since_last_heart += new_points;
+
+            self.card_spawn_interval = (3.0 - (self.score / 5) as f64 * 0.25).max(0.5);
 
             let hearts_to_gain = self.score_since_last_heart / 5;
             if hearts_to_gain > 0 {
