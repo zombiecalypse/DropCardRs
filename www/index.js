@@ -48,6 +48,7 @@ import('../pkg/flashcards.js').then(module => {
 
     answerInput.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
+            event.preventDefault();
             if (game.is_game_over()) {
                 game.restart();
                 gameOverScreen.classList.add('hidden');
