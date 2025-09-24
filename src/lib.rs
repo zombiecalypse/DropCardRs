@@ -66,30 +66,43 @@ struct UnlockedCard<'a> {
     back: &'a str,
 }
 
-#[wasm_bindgen]
-impl Game {
-    pub fn new(width: f64, height: f64, seed: u32, mode: GameMode) -> Game {
-        let game_id = seed.wrapping_mul(1664525).wrapping_add(1013904223);
-
-        let mut game = Game {
+impl Default for Game {
+    fn default() -> Self {
+        Self {
             cards: vec![],
             card_deck: vec![],
             unlocked_cards_count: 0,
-            width,
-            height,
+            width: 600.0,
+            height: 800.0,
             score: 0,
             time_since_last_card: 0.0,
-            card_spawn_interval: 3.0, // spawn a card every 3 seconds
+            card_spawn_interval: 3.0,
             card_speed: 50.0,
             health: 3,
             max_health: 5,
             score_since_last_heart: 0,
             game_over: false,
             paused: false,
-            rng_seed: seed, // Use the provided seed for randomness
+            rng_seed: 0,
+            game_id: 0,
+            mode: GameMode::Normal,
+            next_card_id: 0,
+        }
+    }
+}
+
+#[wasm_bindgen]
+impl Game {
+    pub fn new(width: f64, height: f64, seed: u32, mode: GameMode) -> Game {
+        let game_id = seed.wrapping_mul(1664525).wrapping_add(1013904223);
+
+        let mut game = Game {
+            width,
+            height,
+            rng_seed: seed,
             game_id,
             mode,
-            next_card_id: 0,
+            ..Self::default()
         };
         game.spawn_card();
         game
@@ -99,7 +112,11 @@ impl Game {
         if self.game_over || self.paused {
             return;
         }
+        self.spawn_new_cards(dt);
+        self.update_cards(dt);
+    }
 
+    fn spawn_new_cards(&mut self, dt: f64) {
         self.time_since_last_card += dt;
         let max_cards = 1 + (self.score / 10) as usize;
 
@@ -107,7 +124,9 @@ impl Game {
             self.spawn_card();
             self.time_since_last_card = 0.0;
         }
+    }
 
+    fn update_cards(&mut self, dt: f64) {
         for card in self.cards.iter_mut() {
             if card.flipped {
                 if let Some(time) = &mut card.time_since_flipped {
@@ -294,38 +313,37 @@ impl Game {
         let normalized_answer = normalize_string(answer);
         let initial_card_count = self.cards.len();
 
-        let cards_to_keep: Vec<Card> = self.cards
-            .iter()
-            .filter(|card| !(!card.flipped && card.back.split('/').any(|ans| normalize_string(ans.trim()) == normalized_answer)))
-            .cloned()
-            .collect();
-        
-        self.cards = cards_to_keep;
+        self.cards.retain(|card| !(!card.flipped && card.back.split('/').any(|ans| normalize_string(ans.trim()) == normalized_answer)));
 
         let removed_count = initial_card_count - self.cards.len();
         
         if removed_count > 0 {
-            let new_points = removed_count as i32;
-            self.score += new_points;
-            self.score_since_last_heart += new_points;
-
-            // Check if new cards were unlocked and replenish deck if so
-            let num_unlocked_cards = ((10 + (self.score / 10) * 5) as usize).min(cards::CARD_DATA.len());
-            if num_unlocked_cards > self.unlocked_cards_count {
-                self.replenish_deck();
-            }
-
-            self.card_spawn_interval = (3.0 - (self.score / 5) as f64 * 0.25).max(0.5);
-            self.card_speed = 50.0 + (self.score as f64 * 2.0);
-
-            let hearts_to_gain = self.score_since_last_heart / 5;
-            if hearts_to_gain > 0 {
-                self.health = (self.health + hearts_to_gain).min(self.max_health);
-                self.score_since_last_heart %= 5;
-            }
+            self.handle_correct_answer(removed_count as i32);
             true
         } else {
             false
+        }
+    }
+
+    fn handle_correct_answer(&mut self, removed_count: i32) {
+        self.score += removed_count;
+        self.score_since_last_heart += removed_count;
+
+        // Check if new cards were unlocked and replenish deck if so
+        let num_unlocked_cards = ((10 + (self.score / 10) * 5) as usize).min(cards::CARD_DATA.len());
+        if num_unlocked_cards > self.unlocked_cards_count {
+            self.replenish_deck();
+        }
+
+        // Update difficulty
+        self.card_spawn_interval = (3.0 - (self.score / 5) as f64 * 0.25).max(0.5);
+        self.card_speed = 50.0 + (self.score as f64 * 2.0);
+
+        // Update health
+        let hearts_to_gain = self.score_since_last_heart / 5;
+        if hearts_to_gain > 0 {
+            self.health = (self.health + hearts_to_gain).min(self.max_health);
+            self.score_since_last_heart %= 5;
         }
     }
 }
