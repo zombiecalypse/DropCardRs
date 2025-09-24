@@ -4,7 +4,7 @@ if (window.isFlashCardGameRunning) {
     window.isFlashCardGameRunning = true;
 
     import('../pkg/flashcards.js').then(module => {
-    const { Game } = module;
+    const { Game, GameMode } = module;
 
     const style = document.createElement('style');
     style.textContent = `
@@ -23,8 +23,11 @@ if (window.isFlashCardGameRunning) {
     const GAME_WIDTH = 600;
     const GAME_HEIGHT = 800;
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode') === 'reverse' ? GameMode.Reverse : GameMode.Normal;
+    
     const seed = Math.floor(Math.random() * 2**32);
-    const game = Game.new(GAME_WIDTH, GAME_HEIGHT, seed);
+    const game = Game.new(GAME_WIDTH, GAME_HEIGHT, seed, mode);
     const gameId = game.get_id();
     console.log(`[Game ${gameId}] Initialized.`);
     const gameBoard = document.getElementById('game-board');
