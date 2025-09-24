@@ -27,6 +27,16 @@ pub struct Game {
     card_spawn_interval: f64,
 }
 
+fn normalize_string(s: &str) -> String {
+    s.to_lowercase()
+        .chars()
+        .filter(|c| c.is_alphanumeric() || c.is_whitespace())
+        .collect::<String>()
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
 #[wasm_bindgen]
 impl Game {
     pub fn new(width: f64, height: f64) -> Game {
@@ -98,8 +108,9 @@ impl Game {
         let mut correct = false;
         let mut card_to_remove_index: Option<usize> = None;
 
+        let normalized_answer = normalize_string(answer);
         for (i, card) in self.cards.iter().enumerate() {
-            if !card.flipped && card.back.to_lowercase() == answer.to_lowercase() {
+            if !card.flipped && normalize_string(&card.back) == normalized_answer {
                 correct = true;
                 card_to_remove_index = Some(i);
                 break;
