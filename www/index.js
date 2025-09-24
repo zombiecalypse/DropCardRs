@@ -93,8 +93,11 @@ import('../pkg/flashcards.js').then(module => {
                 game.resume();
             } else {
                 const answer = answerInput.value;
+                console.log(`Enter pressed. Answer: "${answer}"`);
                 if (answer) {
-                    if (!game.submit_answer(answer)) {
+                    const correctly_answered = game.submit_answer(answer);
+                    console.log(`submit_answer returned: ${correctly_answered}`);
+                    if (!correctly_answered) {
                         gameBoard.classList.add('shake');
                         setTimeout(() => {
                             gameBoard.classList.remove('shake');
@@ -137,6 +140,12 @@ import('../pkg/flashcards.js').then(module => {
     function render(timestamp) {
         cardsContainer.innerHTML = '';
         const cards = game.get_cards();
+
+        if (timestamp - lastLogTime > 1000) {
+            const card_fronts = cards.map(c => c.front).join(', ');
+            console.log(`Rendering cards: [${card_fronts}]`);
+            lastLogTime = timestamp;
+        }
 
         for (const card of cards) {
             const cardElement = document.createElement('div');
