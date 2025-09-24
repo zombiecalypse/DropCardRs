@@ -181,29 +181,20 @@ impl Game {
         if self.game_over || self.paused {
             return false;
         }
-        log(&format!("submit_answer called with: '{}'", answer));
         let normalized_answer = normalize_string(answer);
-        log(&format!("Normalized answer: '{}'", normalized_answer));
         let initial_card_count = self.cards.len();
 
-        log(&format!("Cards before removal ({}):", initial_card_count));
-        for card in &self.cards {
-            log(&format!("  - '{}'", card.front));
-        }
-
-        self.cards.retain(|card| {
-            !(!card.flipped && normalize_string(&card.back) == normalized_answer)
-        });
+        let cards_to_keep: Vec<Card> = self.cards
+            .iter()
+            .filter(|card| !(!card.flipped && normalize_string(&card.back) == normalized_answer))
+            .cloned()
+            .collect();
+        
+        self.cards = cards_to_keep;
 
         let removed_count = initial_card_count - self.cards.len();
-
-        log(&format!("Cards after removal ({}):", self.cards.len()));
-        for card in &self.cards {
-            log(&format!("  - '{}'", card.front));
-        }
         
         if removed_count > 0 {
-            log(&format!("Correct answer. Removed {} cards.", removed_count));
             let new_points = removed_count as i32;
             self.score += new_points;
             self.score_since_last_heart += new_points;
@@ -217,7 +208,6 @@ impl Game {
             }
             true
         } else {
-            log("Incorrect answer.");
             false
         }
     }
