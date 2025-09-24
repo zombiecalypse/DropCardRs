@@ -31,6 +31,7 @@ pub struct Game {
     score_since_last_heart: i32,
     game_over: bool,
     paused: bool,
+    rng_seed: u32,
 }
 
 fn normalize_string(s: &str) -> String {
@@ -58,6 +59,7 @@ impl Game {
             score_since_last_heart: 0,
             game_over: false,
             paused: false,
+            rng_seed: 12345, // A fixed seed for deterministic randomness
         };
         game.spawn_card();
         game
@@ -116,17 +118,22 @@ impl Game {
 
     fn spawn_card(&mut self) {
         let (front, back) = self.get_random_card_data();
+        
+        // Another random number for x position
+        self.rng_seed = self.rng_seed.wrapping_mul(1664525).wrapping_add(1013904223);
+        let random_val = self.rng_seed as f64 / u32::MAX as f64;
+
         self.cards.push(Card {
             front,
             back,
-            x: (Math::random() * (self.width - 150.0)), // 150 is card width
+            x: (random_val * (self.width - 150.0)), // 150 is card width
             y: 0.0,
             flipped: false,
             time_since_flipped: None,
         });
     }
 
-    fn get_random_card_data(&self) -> (String, String) {
+    fn get_random_card_data(&mut self) -> (String, String) {
         let data = vec![
             ("Bore da", "Good morning"),
             ("Prynhawn da", "Good afternoon"),
@@ -134,7 +141,10 @@ impl Game {
             ("Sut mae?", "How are you?"),
             ("Croeso", "Welcome"),
         ];
-        let index = (Math::random() * data.len() as f64).floor() as usize;
+        // Simple LCG for deterministic randomness
+        self.rng_seed = self.rng_seed.wrapping_mul(1664525).wrapping_add(1013904223);
+        let random_val = self.rng_seed as f64 / u32::MAX as f64;
+        let index = (random_val * data.len() as f64).floor() as usize;
         (data[index].0.to_string(), data[index].1.to_string())
     }
 
@@ -181,6 +191,7 @@ impl Game {
         self.paused = false;
         self.time_since_last_card = 0.0;
         self.card_spawn_interval = 3.0;
+        self.rng_seed = 12345; // Reset seed
         self.spawn_card();
     }
 
