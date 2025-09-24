@@ -1,10 +1,39 @@
+let animationFrameId = null;
+let tabKeyHandler = null;
+let visibilityChangeHandler = null;
+
+function cleanup() {
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+    }
+    if (tabKeyHandler) {
+        document.removeEventListener('keydown', tabKeyHandler);
+        tabKeyHandler = null;
+    }
+    if (visibilityChangeHandler) {
+        document.removeEventListener('visibilitychange', visibilityChangeHandler);
+        visibilityChangeHandler = null;
+    }
+    // Clear the board to remove old cards and pause screen
+    const gameBoard = document.getElementById('game-board');
+    if (gameBoard) {
+        const cardsContainer = document.getElementById('cards-container');
+        if (cardsContainer) cardsContainer.innerHTML = '';
+        const pauseScreen = document.getElementById('pause-screen');
+        if (pauseScreen) pauseScreen.remove();
+    }
+}
+
 if (module.hot) {
     module.hot.dispose(() => {
-        window.location.reload();
+        cleanup();
     });
 }
 
 import('../pkg/flashcards.js').then(module => {
+    cleanup(); // Clean up any previous state before starting
+
     const { Game } = module;
 
     const style = document.createElement('style');
@@ -64,11 +93,8 @@ import('../pkg/flashcards.js').then(module => {
                 game.resume();
             } else {
                 const answer = answerInput.value;
-                console.log(`Enter pressed. Answer: "${answer}"`);
                 if (answer) {
-                    const correctly_answered = game.submit_answer(answer);
-                    console.log(`submit_answer returned: ${correctly_answered}`);
-                    if (!correctly_answered) {
+                    if (!game.submit_answer(answer)) {
                         gameBoard.classList.add('shake');
                         setTimeout(() => {
                             gameBoard.classList.remove('shake');
@@ -80,18 +106,20 @@ import('../pkg/flashcards.js').then(module => {
         }
     });
 
-    document.addEventListener('keydown', (event) => {
+    tabKeyHandler = (event) => {
         if (event.key === 'Tab' && !game.is_game_over()) {
             event.preventDefault();
             game.pause();
         }
-    });
+    };
+    document.addEventListener('keydown', tabKeyHandler);
 
-    document.addEventListener('visibilitychange', () => {
+    visibilityChangeHandler = () => {
         if (document.hidden && !game.is_game_over()) {
             game.pause();
         }
-    });
+    };
+    document.addEventListener('visibilitychange', visibilityChangeHandler);
 
     let lastTime = 0;
     let lastLogTime = 0;
@@ -103,18 +131,12 @@ import('../pkg/flashcards.js').then(module => {
 
         render(timestamp);
 
-        requestAnimationFrame(gameLoop);
+        animationFrameId = requestAnimationFrame(gameLoop);
     }
 
     function render(timestamp) {
         cardsContainer.innerHTML = '';
         const cards = game.get_cards();
-
-        if (timestamp - lastLogTime > 1000) {
-            const card_fronts = cards.map(c => c.front).join(', ');
-            console.log(`Rendering cards: [${card_fronts}]`);
-            lastLogTime = timestamp;
-        }
 
         for (const card of cards) {
             const cardElement = document.createElement('div');
@@ -165,5 +187,5 @@ import('../pkg/flashcards.js').then(module => {
         }
     }
 
-    requestAnimationFrame(gameLoop);
+    animationFrameId = requestAnimationFrame(gameLoop);
 }).catch(console.error);
