@@ -224,7 +224,7 @@ impl Game {
 
         let cards_to_keep: Vec<Card> = self.cards
             .iter()
-            .filter(|card| !(!card.flipped && normalize_string(&card.back) == normalized_answer))
+            .filter(|card| !(!card.flipped && card.back.split('/').any(|ans| normalize_string(ans.trim()) == normalized_answer)))
             .cloned()
             .collect();
         
@@ -270,10 +270,10 @@ mod tests {
     fn test_submit_correct_answer() {
         let mut game = Game::new(600.0, 800.0, 0);
         game.cards = vec![
-            Card { front: "Q".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
+            Card { front: "Q".to_string(), back: "Answer1 / Answer2".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
         ];
         assert_eq!(game.get_score(), 0);
-        assert!(game.submit_answer("Answer"));
+        assert!(game.submit_answer("Answer2"));
         let cards: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
         assert_eq!(cards.len(), 0);
         assert_eq!(game.get_score(), 1);
@@ -296,9 +296,9 @@ mod tests {
     fn test_submit_answer_normalization() {
         let mut game = Game::new(600.0, 800.0, 0);
         game.cards = vec![
-            Card { front: "Q".to_string(), back: "How are you?".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
+            Card { front: "Q".to_string(), back: "Answer One / How are you?".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
         ];
-        assert!(game.submit_answer("how are you"));
+        assert!(game.submit_answer("  how ARE you?? "));
         let cards: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
         assert_eq!(cards.len(), 0);
     }
