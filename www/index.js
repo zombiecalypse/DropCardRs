@@ -24,7 +24,13 @@ if (window.isFlashCardGameRunning) {
     const GAME_HEIGHT = 800;
 
     const urlParams = new URLSearchParams(window.location.search);
-    const mode = urlParams.get('mode') === 'reverse' ? GameMode.Reverse : GameMode.Normal;
+    const mode_str = urlParams.get('mode');
+    let mode = GameMode.Normal;
+    if (mode_str === 'reverse') {
+        mode = GameMode.Reverse;
+    } else if (mode_str === 'both') {
+        mode = GameMode.Both;
+    }
     const isDebug = urlParams.get('debug') === 'true';
     
     const seed = Math.floor(Math.random() * 2**32);

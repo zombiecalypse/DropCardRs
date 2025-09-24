@@ -14,6 +14,7 @@ extern "C" {
 pub enum GameMode {
     Normal,
     Reverse,
+    Both,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -160,7 +161,18 @@ impl Game {
         let index = (random_val * available_cards.len() as f64).floor() as usize;
         let (front, back) = available_cards[index];
 
-        if self.mode == GameMode::Reverse {
+        let should_reverse = match self.mode {
+            GameMode::Reverse => true,
+            GameMode::Both => {
+                // another random number to decide if we swap
+                self.rng_seed = self.rng_seed.wrapping_mul(1664525).wrapping_add(1013904223);
+                let random_val_for_swap = self.rng_seed as f64 / u32::MAX as f64;
+                random_val_for_swap > 0.5
+            }
+            GameMode::Normal => false,
+        };
+
+        if should_reverse {
             (back.to_string(), front.to_string())
         } else {
             (front.to_string(), back.to_string())
@@ -179,16 +191,27 @@ impl Game {
         let num_available_cards = (10 + (self.score / 10) * 5) as usize;
         let all_cards = cards::CARD_DATA;
         let available_cards_data = &all_cards[..num_available_cards.min(all_cards.len())];
-        let unlocked_cards: Vec<UnlockedCard> = available_cards_data
-            .iter()
-            .map(|(front, back)| {
-                if self.mode == GameMode::Reverse {
-                    UnlockedCard { front: back, back: front }
-                } else {
-                    UnlockedCard { front, back }
-                }
-            })
-            .collect();
+        let unlocked_cards: Vec<UnlockedCard> = match self.mode {
+            GameMode::Both => available_cards_data
+                .iter()
+                .flat_map(|(front, back)| {
+                    vec![
+                        UnlockedCard { front, back },
+                        UnlockedCard { front: back, back: front },
+                    ]
+                })
+                .collect(),
+            _ => available_cards_data
+                .iter()
+                .map(|(front, back)| {
+                    if self.mode == GameMode::Reverse {
+                        UnlockedCard { front: back, back: front }
+                    } else {
+                        UnlockedCard { front, back }
+                    }
+                })
+                .collect(),
+        };
         serde_wasm_bindgen::to_value(&unlocked_cards).unwrap()
     }
 
@@ -489,5 +512,20 @@ mod tests {
 
         assert_eq!(card.front, normal_card.back);
         assert_eq!(card.back, normal_card.front);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_both_mode_card_spawn() {
+        let mut game = Game::new(600.0, 800.0, 1, GameMode::Both);
+        for _ in 0..20 {
+            game.spawn_card();
+        }
+        let cards: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
+        
+        let welsh_fronts = cards.iter().filter(|c| cards::CARD_DATA.iter().any(|(f, _b)| f == &c.front)).count();
+        let english_fronts = cards.len() - welsh_fronts;
+
+        assert!(welsh_fronts > 0, "Expected some cards with Welsh on front");
+        assert!(english_fronts > 0, "Expected some cards with English on front");
     }
 }
