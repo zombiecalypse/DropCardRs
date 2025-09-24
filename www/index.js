@@ -1,3 +1,11 @@
+// --- Robust Cleanup for HMR and Dev Server double-load ---
+// If a cleanup function from a previous run exists, it means we're in a
+// hot-reload or double-load scenario. Run it to tear down the old instance.
+if (window.flashCardGameCleanup) {
+    console.log("Previous game instance found. Running cleanup.");
+    window.flashCardGameCleanup();
+}
+// ---------------------------------------------------------
 
 import('../pkg/flashcards.js').then(module => {
     const { Game } = module;
@@ -174,25 +182,29 @@ import('../pkg/flashcards.js').then(module => {
 
     animationFrameId = requestAnimationFrame(gameLoop);
 
+    // Define and attach the cleanup function to the window object. This function
+    // captures the current game's state and handlers in a closure, allowing
+    // the *next* script execution to clean up this one.
+    window.flashCardGameCleanup = () => {
+        console.log(`[Game ${gameId}] Cleaning up instance.`);
+        cancelAnimationFrame(animationFrameId);
+        answerInput.removeEventListener('keydown', answerHandler);
+        document.removeEventListener('keydown', tabKeyHandler);
+        document.removeEventListener('visibilitychange', visibilityChangeHandler);
+
+        // Also clear the board to prevent visual artifacts
+        const pauseScreen = document.getElementById('pause-screen');
+        if (pauseScreen) pauseScreen.remove();
+        // Check for cardsContainer existence before manipulating
+        if (cardsContainer) cardsContainer.innerHTML = '';
+    };
+
     if (module.hot) {
         module.hot.dispose(() => {
-            console.log(`[Game ${gameId}] HMR dispose. Cleaning up.`);
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
+            if (window.flashCardGameCleanup) {
+                console.log(`[Game ${gameId}] HMR dispose. Cleaning up.`);
+                window.flashCardGameCleanup();
             }
-            if (answerHandler) {
-                answerInput.removeEventListener('keydown', answerHandler);
-            }
-            if (tabKeyHandler) {
-                document.removeEventListener('keydown', tabKeyHandler);
-            }
-            if (visibilityChangeHandler) {
-                document.removeEventListener('visibilitychange', visibilityChangeHandler);
-            }
-            // Clear the board to remove old cards and pause screen
-            const pauseScreen = document.getElementById('pause-screen');
-            if (pauseScreen) pauseScreen.remove();
-            cardsContainer.innerHTML = '';
         });
     }
 }).catch(console.error);
