@@ -6,15 +6,24 @@ import('../pkg/flashcards.js').then(module => {
 
     const game = Game.new(GAME_WIDTH, GAME_HEIGHT);
     const gameBoard = document.getElementById('game-board');
+    const cardsContainer = document.getElementById('cards-container');
     const scoreElement = document.getElementById('score');
+    const healthElement = document.getElementById('health');
+    const gameOverScreen = document.getElementById('game-over-screen');
     const answerInput = document.getElementById('answer-input');
 
     answerInput.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
-            const answer = answerInput.value;
-            if (answer) {
-                if (game.submit_answer(answer)) {
-                    answerInput.value = '';
+            if (game.is_game_over()) {
+                game.restart();
+                gameOverScreen.classList.add('hidden');
+                answerInput.focus();
+            } else {
+                const answer = answerInput.value;
+                if (answer) {
+                    if (game.submit_answer(answer)) {
+                        answerInput.value = '';
+                    }
                 }
             }
         }
@@ -33,7 +42,7 @@ import('../pkg/flashcards.js').then(module => {
     }
 
     function render() {
-        gameBoard.innerHTML = '';
+        cardsContainer.innerHTML = '';
         const cards = game.get_cards();
 
         for (const card of cards) {
@@ -55,10 +64,27 @@ import('../pkg/flashcards.js').then(module => {
 
             cardElement.appendChild(front);
             cardElement.appendChild(back);
-            gameBoard.appendChild(cardElement);
+            cardsContainer.appendChild(cardElement);
         }
 
         scoreElement.textContent = `Score: ${game.get_score()}`;
+
+        // Render health
+        const health = game.get_health();
+        const maxHealth = game.get_max_health();
+        let hearts = '';
+        for (let i = 0; i < health; i++) {
+            hearts += '❤️';
+        }
+        for (let i = 0; i < maxHealth - health; i++) {
+            hearts += '🖤';
+        }
+        healthElement.innerHTML = hearts;
+
+        // Game over
+        if (game.is_game_over()) {
+            gameOverScreen.classList.remove('hidden');
+        }
     }
 
     requestAnimationFrame(gameLoop);

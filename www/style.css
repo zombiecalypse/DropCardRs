@@ -38,6 +38,11 @@ body {
     font-size: 1.2em;
 }
 
+#health {
+    font-size: 1.2em;
+    letter-spacing: 2px;
+}
+
 .card {
     position: absolute;
     width: 150px;
@@ -77,4 +82,23 @@ body {
 .card .back {
     background: lightcoral;
     transform: rotateX(180deg);
+}
+
+#game-over-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+
+#game-over-screen.hidden {
+    display: none;
 }

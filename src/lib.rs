@@ -26,6 +26,10 @@ pub struct Game {
     score: i32,
     time_since_last_card: f64,
     card_spawn_interval: f64,
+    health: i32,
+    max_health: i32,
+    score_since_last_heart: i32,
+    game_over: bool,
 }
 
 fn normalize_string(s: &str) -> String {
@@ -48,12 +52,20 @@ impl Game {
             score: 0,
             time_since_last_card: 0.0,
             card_spawn_interval: 3.0, // spawn a card every 3 seconds
+            health: 3,
+            max_health: 5,
+            score_since_last_heart: 0,
+            game_over: false,
         };
         game.spawn_card();
         game
     }
 
     pub fn tick(&mut self, dt: f64) {
+        if self.game_over {
+            return;
+        }
+
         self.time_since_last_card += dt;
         if self.time_since_last_card > self.card_spawn_interval {
             self.spawn_card();
@@ -72,6 +84,10 @@ impl Game {
                     card.y = self.height - 50.0; // Stop at the bottom
                     card.flipped = true;
                     card.time_since_flipped = Some(0.0);
+                    self.health -= 1;
+                    if self.health <= 0 {
+                        self.game_over = true;
+                    }
                 }
             }
         }
@@ -121,6 +137,9 @@ impl Game {
     }
 
     pub fn submit_answer(&mut self, answer: &str) -> bool {
+        if self.game_over {
+            return false;
+        }
         let normalized_answer = normalize_string(answer);
         let initial_card_count = self.cards.len();
 
@@ -130,7 +149,15 @@ impl Game {
 
         let removed_count = initial_card_count - self.cards.len();
         if removed_count > 0 {
-            self.score += removed_count as i32;
+            let new_points = removed_count as i32;
+            self.score += new_points;
+            self.score_since_last_heart += new_points;
+
+            let hearts_to_gain = self.score_since_last_heart / 5;
+            if hearts_to_gain > 0 {
+                self.health = (self.health + hearts_to_gain).min(self.max_health);
+                self.score_since_last_heart %= 5;
+            }
             true
         } else {
             false
@@ -227,6 +254,7 @@ mod tests {
         // Tick past the flip threshold
         game.tick(0.2);
         let cards_after_flip: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
+        assert_eq!(game.health, 2);
         assert_eq!(cards_after_flip.len(), 1);
         assert!(cards_after_flip[0].flipped);
         assert_eq!(cards_after_flip[0].y, flip_y);
@@ -235,5 +263,53 @@ mod tests {
         game.tick(1.0);
         let cards_after_vanish: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
         assert_eq!(cards_after_vanish.len(), 0);
+    }
+    
+    #[wasm_bindgen_test]
+    fn test_health_gain_on_score() {
+        let mut game = Game::new(600.0, 800.0);
+        game.health = 1; // set health low to test gain
+        game.cards = vec![
+            Card { front: "Q1".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
+            Card { front: "Q2".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
+            Card { front: "Q3".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
+            Card { front: "Q4".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
+            Card { front: "Q5".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
+        ];
+        assert!(game.submit_answer("A"));
+        assert_eq!(game.get_score(), 5);
+        assert_eq!(game.get_health(), 2);
+        let cards: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
+        assert_eq!(cards.len(), 0);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_game_over_and_restart() {
+        let mut game = Game::new(600.0, 800.0);
+        game.health = 1;
+        game.cards = vec![
+            Card { front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
+        ];
+        let height = 800.0;
+        let card_speed = 50.0;
+        let flip_y = height - 50.0;
+        let time_to_flip = flip_y / card_speed;
+
+        game.tick(time_to_flip + 0.1); // trigger flip and health loss
+        assert!(game.is_game_over());
+        assert_eq!(game.get_health(), 0);
+
+        // in game over, tick should do nothing
+        game.tick(10.0);
+        let cards: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
+        assert_eq!(cards.len(), 1); // card is not removed
+
+        // restart
+        game.restart();
+        assert!(!game.is_game_over());
+        assert_eq!(game.get_health(), 3);
+        assert_eq!(game.get_score(), 0);
+        let cards_after_restart: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
+        assert_eq!(cards_after_restart.len(), 1); // one new card spawned
     }
 }

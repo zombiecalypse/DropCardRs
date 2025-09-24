@@ -7,10 +7,17 @@
 </head>
 <body>
     <div id="game-container">
-        <div id="game-board"></div>
+        <div id="game-board">
+            <div id="cards-container"></div>
+            <div id="game-over-screen" class="hidden">
+                <h1>Game Over</h1>
+                <p>Press ENTER to restart</p>
+            </div>
+        </div>
         <div id="ui">
             <input type="text" id="answer-input" placeholder="Type answer..." autofocus>
             <div id="score">Score: 0</div>
+            <div id="health"></div>
         </div>
     </div>
     <script src="./bootstrap.js"></script>
