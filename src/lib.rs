@@ -562,12 +562,12 @@ mod tests {
     #[wasm_bindgen_test]
     fn test_reverse_mode_card_spawn() {
         // use a seed that is not 0 to avoid predictable first card with index 0
-        let mut game = Game::new(600.0, 800.0, 1, GameMode::Reverse); 
+        let game = Game::new(600.0, 800.0, 1, GameMode::Reverse); 
         let cards: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
         assert_eq!(cards.len(), 1);
         let card = &cards[0];
 
-        let mut normal_game = Game::new(600.0, 800.0, 1, GameMode::Normal);
+        let normal_game = Game::new(600.0, 800.0, 1, GameMode::Normal);
         let normal_cards: Vec<Card> = serde_wasm_bindgen::from_value(normal_game.get_cards()).unwrap();
         let normal_card = &normal_cards[0];
 
