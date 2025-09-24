@@ -17,6 +17,8 @@ import('../pkg/flashcards.js').then(module => {
     pauseScreen.className = 'overlay hidden';
     pauseScreen.innerHTML = '<h1>Paused</h1><p>Press Enter to continue</p>';
     gameBoard.appendChild(pauseScreen);
+    pauseScreen.style.zIndex = "10";
+    pauseScreen.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
 
     answerInput.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
