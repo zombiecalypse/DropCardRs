@@ -11,6 +11,13 @@ window.dropCardCleanup = function() {
         cancelAnimationFrame(window.dropCardAnimationId);
         window.dropCardAnimationId = null;
     }
+    if (window.dropCardAnswerHandler) {
+        const answerInput = document.getElementById('answer-input');
+        if (answerInput) {
+            answerInput.removeEventListener('keydown', window.dropCardAnswerHandler);
+        }
+        window.dropCardAnswerHandler = null;
+    }
     if (window.dropCardTabHandler) {
         document.removeEventListener('keydown', window.dropCardTabHandler);
         window.dropCardTabHandler = null;
@@ -81,7 +88,7 @@ import('../pkg/flashcards.js').then(module => {
     });
     gameBoard.appendChild(pauseScreen);
 
-    answerInput.addEventListener('keydown', (event) => {
+    window.dropCardAnswerHandler = (event) => {
         if (event.key === 'Enter') {
             event.preventDefault();
             if (game.is_game_over()) {
@@ -93,8 +100,11 @@ import('../pkg/flashcards.js').then(module => {
                 game.resume();
             } else {
                 const answer = answerInput.value;
+                console.log(`Enter pressed. Answer: "${answer}"`);
                 if (answer) {
-                    if (!game.submit_answer(answer)) {
+                    const correctly_answered = game.submit_answer(answer);
+                    console.log(`submit_answer returned: ${correctly_answered}`);
+                    if (!correctly_answered) {
                         gameBoard.classList.add('shake');
                         setTimeout(() => {
                             gameBoard.classList.remove('shake');
@@ -104,7 +114,8 @@ import('../pkg/flashcards.js').then(module => {
                 }
             }
         }
-    });
+    };
+    answerInput.addEventListener('keydown', window.dropCardAnswerHandler);
 
     window.dropCardTabHandler = (event) => {
         if (event.key === 'Tab' && !game.is_game_over()) {
@@ -137,6 +148,12 @@ import('../pkg/flashcards.js').then(module => {
     function render(timestamp) {
         cardsContainer.innerHTML = '';
         const cards = game.get_cards();
+
+        if (timestamp - lastLogTime > 1000) {
+            const card_fronts = cards.map(c => c.front).join(', ');
+            console.log(`Rendering cards: [${card_fronts}]`);
+            lastLogTime = timestamp;
+        }
 
         for (const card of cards) {
             const cardElement = document.createElement('div');
