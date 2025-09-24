@@ -88,23 +88,27 @@ import('../pkg/flashcards.js').then(module => {
     });
 
     let lastTime = 0;
+    let lastLogTime = 0;
     function gameLoop(timestamp) {
         const deltaTime = (timestamp - lastTime) / 1000; // in seconds
         lastTime = timestamp;
 
         game.tick(deltaTime || 0);
 
-        render();
+        render(timestamp);
 
         requestAnimationFrame(gameLoop);
     }
 
-    function render() {
+    function render(timestamp) {
         cardsContainer.innerHTML = '';
         const cards = game.get_cards();
 
-        const card_fronts = cards.map(c => c.front).join(', ');
-        console.log(`Rendering cards: [${card_fronts}]`);
+        if (timestamp - lastLogTime > 1000) {
+            const card_fronts = cards.map(c => c.front).join(', ');
+            console.log(`Rendering cards: [${card_fronts}]`);
+            lastLogTime = timestamp;
+        }
 
         for (const card of cards) {
             const cardElement = document.createElement('div');
