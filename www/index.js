@@ -61,6 +61,8 @@ import('../pkg/flashcards.js').then(module => {
     const GAME_HEIGHT = 800;
 
     const game = Game.new(GAME_WIDTH, GAME_HEIGHT);
+    const gameId = game.get_id();
+    console.log(`[Game ${gameId}] Initialized.`);
     const gameBoard = document.getElementById('game-board');
     const cardsContainer = document.getElementById('cards-container');
     const scoreElement = document.getElementById('score');
@@ -100,10 +102,10 @@ import('../pkg/flashcards.js').then(module => {
                 game.resume();
             } else {
                 const answer = answerInput.value;
-                console.log(`Enter pressed. Answer: "${answer}"`);
+                console.log(`[Game ${gameId}] Enter pressed. Answer: "${answer}"`);
                 if (answer) {
                     const correctly_answered = game.submit_answer(answer);
-                    console.log(`submit_answer returned: ${correctly_answered}`);
+                    console.log(`[Game ${gameId}] submit_answer returned: ${correctly_answered}`);
                     if (!correctly_answered) {
                         gameBoard.classList.add('shake');
                         setTimeout(() => {
@@ -151,7 +153,7 @@ import('../pkg/flashcards.js').then(module => {
 
         if (timestamp - lastLogTime > 1000) {
             const card_fronts = cards.map(c => c.front).join(', ');
-            console.log(`Rendering cards: [${card_fronts}]`);
+            console.log(`[Game ${gameId}] Rendering cards: [${card_fronts}]`);
             lastLogTime = timestamp;
         }
 

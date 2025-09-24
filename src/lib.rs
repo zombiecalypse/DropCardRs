@@ -1,5 +1,6 @@
 use wasm_bindgen::prelude::*;
 use serde::{Serialize, Deserialize};
+use js_sys::Date;
 
 #[wasm_bindgen]
 extern "C" {
@@ -31,6 +32,7 @@ pub struct Game {
     game_over: bool,
     paused: bool,
     rng_seed: u32,
+    game_id: u32,
 }
 
 fn normalize_string(s: &str) -> String {
@@ -46,6 +48,9 @@ fn normalize_string(s: &str) -> String {
 #[wasm_bindgen]
 impl Game {
     pub fn new(width: f64, height: f64) -> Game {
+        let seed = Date::now() as u32;
+        let game_id = seed.wrapping_mul(1664525).wrapping_add(1013904223);
+
         let mut game = Game {
             cards: vec![],
             width,
@@ -59,6 +64,7 @@ impl Game {
             game_over: false,
             paused: false,
             rng_seed: 12345, // A fixed seed for deterministic randomness
+            game_id,
         };
         game.spawn_card();
         game
@@ -102,7 +108,7 @@ impl Game {
         for card in self.cards.iter() {
             if let Some(time_flipped) = card.time_since_flipped {
                 if time_flipped >= 1.0 {
-                    log(&format!("Card '{}' will be removed (flipped timeout).", card.front));
+                    log(&format!("[Game {}] Card '{}' will be removed (flipped timeout).", self.game_id, card.front));
                 }
             }
         }
@@ -149,6 +155,10 @@ impl Game {
 
     pub fn get_cards(&self) -> JsValue {
         serde_wasm_bindgen::to_value(&self.cards).unwrap()
+    }
+
+    pub fn get_id(&self) -> u32 {
+        self.game_id
     }
 
 
@@ -198,12 +208,12 @@ impl Game {
         if self.game_over || self.paused {
             return false;
         }
-        log(&format!("submit_answer called with: '{}'", answer));
+        log(&format!("[Game {}] submit_answer called with: '{}'", self.game_id, answer));
         let normalized_answer = normalize_string(answer);
-        log(&format!("Normalized answer: '{}'", normalized_answer));
+        log(&format!("[Game {}] Normalized answer: '{}'", self.game_id, normalized_answer));
         let initial_card_count = self.cards.len();
 
-        log(&format!("Cards before removal ({}):", initial_card_count));
+        log(&format!("[Game {}] Cards before removal ({}):", self.game_id, initial_card_count));
         for card in &self.cards {
             let card_back_normalized = normalize_string(&card.back);
             let is_match = card_back_normalized == normalized_answer;
@@ -224,13 +234,13 @@ impl Game {
 
         let removed_count = initial_card_count - self.cards.len();
         
-        log(&format!("Cards after removal ({}):", self.cards.len()));
+        log(&format!("[Game {}] Cards after removal ({}):", self.game_id, self.cards.len()));
         for card in &self.cards {
             log(&format!("  - '{}'", card.front));
         }
 
         if removed_count > 0 {
-            log(&format!("Correct answer. Removed {} cards.", removed_count));
+            log(&format!("[Game {}] Correct answer. Removed {} cards.", self.game_id, removed_count));
             let new_points = removed_count as i32;
             self.score += new_points;
             self.score_since_last_heart += new_points;
@@ -244,7 +254,7 @@ impl Game {
             }
             true
         } else {
-            log("Incorrect answer.");
+            log(&format!("[Game {}] Incorrect answer.", self.game_id));
             false
         }
     }
