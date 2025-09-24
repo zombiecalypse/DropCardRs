@@ -17,6 +17,15 @@ if (window.isFlashCardGameRunning) {
             30%, 50%, 70% { transform: translateX(-4px); }
             40%, 60% { transform: translateX(4px); }
         }
+        .card.solved {
+            animation: solved-animation 0.5s forwards;
+        }
+        @keyframes solved-animation {
+            to {
+                transform: scale(1.1);
+                opacity: 0;
+            }
+        }
     `;
     document.head.appendChild(style);
 
@@ -45,6 +54,7 @@ if (window.isFlashCardGameRunning) {
     const answerInput = document.getElementById('answer-input');
 
     let debugPane = null;
+    let cardElements = new Map();
 
     if (isDebug) {
         debugPane = document.createElement('div');
@@ -148,8 +158,19 @@ if (window.isFlashCardGameRunning) {
     }
 
     function render(timestamp) {
-        cardsContainer.innerHTML = '';
-        const cards = game.get_cards();
+        const currentCards = game.get_cards();
+        const currentCardIds = new Set(currentCards.map(c => c.id));
+
+        // Animate and remove solved cards
+        for (const [id, element] of cardElements.entries()) {
+            if (!currentCardIds.has(id)) {
+                element.classList.add('solved');
+                element.addEventListener('animationend', () => {
+                    element.remove();
+                });
+                cardElements.delete(id);
+            }
+        }
 
         if (isDebug && debugPane) {
             const unlockedCards = game.get_unlocked_cards();
@@ -161,26 +182,36 @@ if (window.isFlashCardGameRunning) {
             debugPane.innerHTML = content;
         }
 
-        for (const card of cards) {
-            const cardElement = document.createElement('div');
-            cardElement.className = 'card';
+        // Add or update cards on screen
+        for (const card of currentCards) {
+            let cardElement = cardElements.get(card.id);
+
+            if (!cardElement) { // New card
+                cardElement = document.createElement('div');
+                cardElement.className = 'card';
+                cardElements.set(card.id, cardElement);
+                cardsContainer.appendChild(cardElement);
+
+                const front = document.createElement('div');
+                front.className = 'front';
+                cardElement.appendChild(front);
+
+                const back = document.createElement('div');
+                back.className = 'back';
+                cardElement.appendChild(back);
+            }
+            
+            // Update common properties
             if (card.flipped) {
                 cardElement.classList.add('flipped');
+            } else {
+                cardElement.classList.remove('flipped');
             }
             cardElement.style.left = `${card.x}px`;
             cardElement.style.top = `${card.y}px`;
-
-            const front = document.createElement('div');
-            front.className = 'front';
-            front.textContent = card.front;
-
-            const back = document.createElement('div');
-            back.className = 'back';
-            back.textContent = card.back;
-
-            cardElement.appendChild(front);
-            cardElement.appendChild(back);
-            cardsContainer.appendChild(cardElement);
+            
+            cardElement.querySelector('.front').textContent = card.front;
+            cardElement.querySelector('.back').textContent = card.back;
         }
 
         scoreElement.textContent = `Score: ${game.get_score()}`;
