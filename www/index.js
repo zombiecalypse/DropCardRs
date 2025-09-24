@@ -103,6 +103,9 @@ import('../pkg/flashcards.js').then(module => {
         cardsContainer.innerHTML = '';
         const cards = game.get_cards();
 
+        const card_fronts = cards.map(c => c.front).join(', ');
+        console.log(`Rendering cards: [${card_fronts}]`);
+
         for (const card of cards) {
             const cardElement = document.createElement('div');
             cardElement.className = 'card';

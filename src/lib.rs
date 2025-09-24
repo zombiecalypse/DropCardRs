@@ -98,6 +98,13 @@ impl Game {
         }
 
         // Remove cards that have been flipped for over 1 second
+        for card in self.cards.iter() {
+            if let Some(time_flipped) = card.time_since_flipped {
+                if time_flipped >= 1.0 {
+                    log(&format!("Card '{}' will be removed (flipped timeout).", card.front));
+                }
+            }
+        }
         self.cards.retain(|card| {
             if let Some(time_flipped) = card.time_since_flipped {
                 time_flipped < 1.0
