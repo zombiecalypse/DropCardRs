@@ -9,6 +9,13 @@ extern "C" {
     fn log(s: &str);
 }
 
+#[wasm_bindgen]
+#[derive(Clone, Copy, PartialEq)]
+pub enum GameMode {
+    Normal,
+    Reverse,
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Card {
     pub front: String,
