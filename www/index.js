@@ -50,16 +50,21 @@ import('../pkg/flashcards.js').then(module => {
         if (event.key === 'Enter') {
             event.preventDefault();
             if (game.is_game_over()) {
+                console.log("Game is over. Restarting.");
                 game.restart();
                 gameOverScreen.classList.add('hidden');
                 pauseScreen.style.display = 'none';
                 answerInput.focus();
             } else if (game.is_paused()) {
+                console.log("Game is paused. Resuming.");
                 game.resume();
             } else {
                 const answer = answerInput.value;
+                console.log(`Enter pressed. Answer: "${answer}"`);
                 if (answer) {
-                    if (!game.submit_answer(answer)) {
+                    const correctly_answered = game.submit_answer(answer);
+                    console.log(`submit_answer returned: ${correctly_answered}`);
+                    if (!correctly_answered) {
                         gameBoard.classList.add('shake');
                         setTimeout(() => {
                             gameBoard.classList.remove('shake');

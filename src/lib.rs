@@ -181,7 +181,9 @@ impl Game {
         if self.game_over || self.paused {
             return false;
         }
+        log(&format!("submit_answer called with: '{}'", answer));
         let normalized_answer = normalize_string(answer);
+        log(&format!("Normalized answer: '{}'", normalized_answer));
         let initial_card_count = self.cards.len();
 
         self.cards.retain(|card| {
@@ -190,6 +192,7 @@ impl Game {
 
         let removed_count = initial_card_count - self.cards.len();
         if removed_count > 0 {
+            log(&format!("Correct answer. Removed {} cards.", removed_count));
             let new_points = removed_count as i32;
             self.score += new_points;
             self.score_since_last_heart += new_points;
@@ -203,6 +206,7 @@ impl Game {
             }
             true
         } else {
+            log("Incorrect answer.");
             false
         }
     }
