@@ -1,0 +1,18 @@
+[package]
+name = "flashcards"
+version = "0.1.0"
+authors = ["Software Developer"]
+edition = "2021"
+description = "A timed flashcard game"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wasm-bindgen = "0.2"
+js-sys = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde-wasm-bindgen = "0.4"
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.34"
