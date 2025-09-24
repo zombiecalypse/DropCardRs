@@ -25,6 +25,7 @@ if (window.isFlashCardGameRunning) {
 
     const urlParams = new URLSearchParams(window.location.search);
     const mode = urlParams.get('mode') === 'reverse' ? GameMode.Reverse : GameMode.Normal;
+    const isDebug = urlParams.get('debug') === 'true';
     
     const seed = Math.floor(Math.random() * 2**32);
     const game = Game.new(GAME_WIDTH, GAME_HEIGHT, seed, mode);
@@ -38,8 +39,6 @@ if (window.isFlashCardGameRunning) {
     const answerInput = document.getElementById('answer-input');
 
     let debugPane = null;
-    const urlParams = new URLSearchParams(window.location.search);
-    const isDebug = urlParams.get('debug') === 'true';
 
     if (isDebug) {
         debugPane = document.createElement('div');
