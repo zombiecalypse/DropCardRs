@@ -4,6 +4,28 @@ A timed flashcard game built with Rust and WebAssembly.
 
 This project is a simple browser-based game where flashcards fall from the top of the screen. The player must type the answer to the card's front before it reaches the bottom and flips over.
 
+## Features
+
+-   **Progressive Difficulty:** The game starts easy and gets harder as your score increases. Card speed, spawn rate, and the number of simultaneous cards all increase over time.
+-   **Dynamic Card Unlocking:** Start with a small set of cards and unlock more as you score points.
+-   **Shuffled Deck:** Cards are drawn from a shuffled deck to ensure all unlocked cards are practiced equally.
+-   **Multiple Correct Answers:** Some cards accept multiple correct translations (e.g., "Thank you" and "Thanks").
+-   **Game Pausing:** The game automatically pauses if the browser tab loses focus and can be manually paused with the `Tab` key.
+
+## Game Modes
+
+The game supports different modes for practicing, controlled via URL parameters.
+
+-   **Normal Mode (Default):** Practice translating from Welsh to English.
+    -   `http://localhost:8080`
+-   **Reverse Mode:** Practice translating from English to Welsh.
+    -   `http://localhost:8080/?mode=reverse`
+-   **Both Mode:** Practice a random mix of both Welsh-to-English and English-to-Welsh.
+    -   `http://localhost:8080/?mode=both`
+-   **Debug Mode:** Displays a side panel with all currently unlocked cards. This can be combined with other modes.
+    -   `http://localhost:8080/?debug=true`
+    -   `http://localhost:8080/?mode=reverse&debug=true`
+
 ## Prerequisites
 
 Before you begin, ensure you have the following installed:
@@ -28,7 +50,7 @@ Before you begin, ensure you have the following installed:
     ```bash
     npm run serve
     ```
-    The game will be available at `http://localhost:8080`.
+    The game will be available at `http://localhost:8080`. See the "Game Modes" section for URL parameters to change the game mode.
 
 ## Running Tests
 
