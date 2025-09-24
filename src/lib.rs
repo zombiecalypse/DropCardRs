@@ -135,12 +135,15 @@ impl Game {
     }
 
     fn get_random_card_data(&mut self) -> (String, String) {
-        let data = cards::CARD_DATA;
+        let num_available_cards = (10 + (self.score / 10) * 5) as usize;
+        let all_cards = cards::CARD_DATA;
+        let available_cards = &all_cards[..num_available_cards.min(all_cards.len())];
+
         // Simple LCG for deterministic randomness
         self.rng_seed = self.rng_seed.wrapping_mul(1664525).wrapping_add(1013904223);
         let random_val = self.rng_seed as f64 / u32::MAX as f64;
-        let index = (random_val * data.len() as f64).floor() as usize;
-        (data[index].0.to_string(), data[index].1.to_string())
+        let index = (random_val * available_cards.len() as f64).floor() as usize;
+        (available_cards[index].0.to_string(), available_cards[index].1.to_string())
     }
 
     pub fn get_cards(&self) -> JsValue {
