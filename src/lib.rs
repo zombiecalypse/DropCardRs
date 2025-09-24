@@ -186,18 +186,22 @@ impl Game {
         log(&format!("Normalized answer: '{}'", normalized_answer));
         let initial_card_count = self.cards.len();
 
+        log(&format!("Cards before removal ({}):", initial_card_count));
+        for card in &self.cards {
+            log(&format!("  - '{}'", card.front));
+        }
+
         self.cards.retain(|card| {
-            let card_back_normalized = normalize_string(&card.back);
-            let is_match = card_back_normalized == normalized_answer;
-            let should_remove = !card.flipped && is_match;
-            log(&format!(
-                "Checking card '{}' | norm_back: '{}' | norm_answer: '{}' | is_match: {} | should_remove: {}",
-                card.front, card_back_normalized, normalized_answer, is_match, should_remove
-            ));
-            !should_remove
+            !(!card.flipped && normalize_string(&card.back) == normalized_answer)
         });
 
         let removed_count = initial_card_count - self.cards.len();
+
+        log(&format!("Cards after removal ({}):", self.cards.len()));
+        for card in &self.cards {
+            log(&format!("  - '{}'", card.front));
+        }
+        
         if removed_count > 0 {
             log(&format!("Correct answer. Removed {} cards.", removed_count));
             let new_points = removed_count as i32;
