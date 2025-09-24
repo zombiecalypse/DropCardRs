@@ -121,3 +121,96 @@ impl Game {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use wasm_bindgen_test::*;
+
+    wasm_bindgen_test_configure!(run_in_browser);
+
+    #[test]
+    fn test_normalize_string() {
+        assert_eq!(normalize_string("  HeLlO, WoRlD!  "), "hello world");
+        assert_eq!(normalize_string("How are you?"), "how are you");
+        assert_eq!(normalize_string("test-ing 123"), "testing 123");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_submit_correct_answer() {
+        let mut game = Game::new(600.0, 800.0);
+        game.cards = vec![
+            Card { front: "Q".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false },
+        ];
+        assert_eq!(game.get_score(), 0);
+        assert!(game.submit_answer("Answer"));
+        let cards: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
+        assert_eq!(cards.len(), 0);
+        assert_eq!(game.get_score(), 1);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_submit_incorrect_answer() {
+        let mut game = Game::new(600.0, 800.0);
+        game.cards = vec![
+            Card { front: "Q".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false },
+        ];
+        assert_eq!(game.get_score(), 0);
+        assert!(!game.submit_answer("Wrong"));
+        let cards: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
+        assert_eq!(cards.len(), 1);
+        assert_eq!(game.get_score(), 0);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_submit_answer_normalization() {
+        let mut game = Game::new(600.0, 800.0);
+        game.cards = vec![
+            Card { front: "Q".to_string(), back: "How are you?".to_string(), x: 0.0, y: 0.0, flipped: false },
+        ];
+        assert!(game.submit_answer("how are you"));
+        let cards: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
+        assert_eq!(cards.len(), 0);
+    }
+    
+    #[wasm_bindgen_test]
+    fn test_submit_answer_resolves_multiple_cards() {
+        let mut game = Game::new(600.0, 800.0);
+        game.cards = vec![
+            Card { front: "Q1".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false },
+            Card { front: "Q2".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false },
+            Card { front: "Q3".to_string(), back: "Different".to_string(), x: 0.0, y: 0.0, flipped: false },
+        ];
+        assert_eq!(game.get_score(), 0);
+        assert!(game.submit_answer("answer"));
+        let cards: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
+        assert_eq!(cards.len(), 1);
+        assert_eq!(cards[0].back, "Different");
+        assert_eq!(game.get_score(), 2);
+    }
+    
+    #[wasm_bindgen_test]
+    fn test_tick_moves_and_flips_card() {
+        let height = 800.0;
+        let mut game = Game::new(600.0, height);
+        game.cards = vec![
+            Card { front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false },
+        ];
+
+        // Tick to just before the flip threshold
+        let card_speed = 50.0;
+        let flip_y = height - 50.0;
+        let time_to_flip = flip_y / card_speed;
+        
+        game.tick(time_to_flip - 0.1);
+        let cards_before_flip: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
+        assert!(!cards_before_flip[0].flipped);
+        assert!(cards_before_flip[0].y < flip_y);
+
+        // Tick past the flip threshold
+        game.tick(0.2);
+        let cards_after_flip: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
+        assert!(cards_after_flip[0].flipped);
+        assert!(cards_after_flip[0].y >= flip_y);
+    }
+}
