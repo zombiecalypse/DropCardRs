@@ -74,11 +74,11 @@ impl Game {
 
     fn get_random_card_data(&self) -> (String, String) {
         let data = vec![
-            ("紅", "kurenai"),
-            ("青", "ao"),
-            ("緑", "midori"),
-            ("白", "shiro"),
-            ("黒", "kuro"),
+            ("Bore da", "Good morning"),
+            ("Prynhawn da", "Good afternoon"),
+            ("Nos da", "Good night"),
+            ("Sut mae?", "How are you?"),
+            ("Croeso", "Welcome"),
         ];
         let index = (Math::random() * data.len() as f64).floor() as usize;
         (data[index].0.to_string(), data[index].1.to_string())
