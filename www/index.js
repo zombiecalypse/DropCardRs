@@ -58,8 +58,11 @@ import('../pkg/flashcards.js').then(module => {
                 game.resume();
             } else {
                 const answer = answerInput.value;
+                console.log(`Enter pressed. Answer: "${answer}"`);
                 if (answer) {
-                    if (!game.submit_answer(answer)) {
+                    const correctly_answered = game.submit_answer(answer);
+                    console.log(`submit_answer returned: ${correctly_answered}`);
+                    if (!correctly_answered) {
                         gameBoard.classList.add('shake');
                         setTimeout(() => {
                             gameBoard.classList.remove('shake');
