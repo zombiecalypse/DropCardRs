@@ -49,3 +49,10 @@ To deploy manually, you can run:
 npm run deploy
 ```
 This will build the project and push the `dist` directory to the `gh-pages` branch. You will need to configure your repository on GitHub to serve from the `gh-pages` branch.
+
+## Why?
+
+This is a comparison to https://github.com/zombiecalypse/DropCard, which
+creates the same game in pure javascript. Both were coded by AI, but presumably
+pure javascript has a lot more online discussions that the model could have
+learned from. 
