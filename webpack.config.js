@@ -21,5 +21,6 @@ module.exports = {
   experiments: {
     asyncWebAssembly: true
   },
-  mode: 'development'
+  mode: 'development',
+  devtool: 'source-map'
 };
