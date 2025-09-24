@@ -1,3 +1,9 @@
+if (module.hot) {
+    module.hot.dispose(() => {
+        window.location.reload();
+    });
+}
+
 import('../pkg/flashcards.js').then(module => {
     const { Game } = module;
 
