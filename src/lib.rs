@@ -86,9 +86,12 @@ impl Game {
                     card.y = self.height - 50.0; // Stop at the bottom
                     card.flipped = true;
                     card.time_since_flipped = Some(0.0);
-                    self.health -= 1;
-                    if self.health <= 0 {
-                        self.game_over = true;
+                    if !self.game_over {
+                        self.health -= 1;
+                        if self.health <= 0 {
+                            self.health = 0;
+                            self.game_over = true;
+                        }
                     }
                 }
             }
@@ -279,6 +282,8 @@ mod tests {
         game.cards = vec![
             Card { front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
         ];
+        // Prevent new cards from spawning during the test to isolate behavior
+        game.card_spawn_interval = 1_000_000.0;
 
         // Tick to just before the flip threshold
         let card_speed = 50.0;
@@ -330,6 +335,8 @@ mod tests {
         game.cards = vec![
             Card { front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
         ];
+        // Prevent new cards from spawning during the test to isolate behavior
+        game.card_spawn_interval = 1_000_000.0;
         let height = 800.0;
         let card_speed = 50.0;
         let flip_y = height - 50.0;
