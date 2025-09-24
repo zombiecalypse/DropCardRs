@@ -25,6 +25,7 @@ pub struct Game {
     score: i32,
     time_since_last_card: f64,
     card_spawn_interval: f64,
+    card_speed: f64,
     health: i32,
     max_health: i32,
     score_since_last_heart: i32,
@@ -56,6 +57,7 @@ impl Game {
             score: 0,
             time_since_last_card: 0.0,
             card_spawn_interval: 3.0, // spawn a card every 3 seconds
+            card_speed: 50.0,
             health: 3,
             max_health: 5,
             score_since_last_heart: 0,
@@ -74,19 +76,20 @@ impl Game {
         }
 
         self.time_since_last_card += dt;
-        if self.time_since_last_card > self.card_spawn_interval {
+        let max_cards = 1 + (self.score / 10) as usize;
+
+        if self.time_since_last_card > self.card_spawn_interval && self.cards.len() < max_cards {
             self.spawn_card();
             self.time_since_last_card = 0.0;
         }
 
-        let card_speed = 50.0; // pixels per second
         for card in self.cards.iter_mut() {
             if card.flipped {
                 if let Some(time) = &mut card.time_since_flipped {
                     *time += dt;
                 }
             } else {
-                card.y += card_speed * dt;
+                card.y += self.card_speed * dt;
                 if card.y >= self.height - 50.0 { // 50 is card height
                     card.y = self.height - 50.0; // Stop at the bottom
                     card.flipped = true;
@@ -191,6 +194,7 @@ impl Game {
         self.paused = false;
         self.time_since_last_card = 0.0;
         self.card_spawn_interval = 3.0;
+        self.card_speed = 50.0;
         self.rng_seed = self.game_id; // Reset seed to be deterministic for this game instance
         self.spawn_card();
     }
@@ -218,6 +222,7 @@ impl Game {
             self.score_since_last_heart += new_points;
 
             self.card_spawn_interval = (3.0 - (self.score / 5) as f64 * 0.25).max(0.5);
+            self.card_speed = 50.0 + (self.score as f64 * 2.0);
 
             let hearts_to_gain = self.score_since_last_heart / 5;
             if hearts_to_gain > 0 {
@@ -309,7 +314,7 @@ mod tests {
         game.card_spawn_interval = 1_000_000.0;
 
         // Tick to just before the flip threshold
-        let card_speed = 50.0;
+        let card_speed = game.card_speed;
         let flip_y = height - 50.0;
         let time_to_flip = flip_y / card_speed;
         
@@ -361,7 +366,7 @@ mod tests {
         // Prevent new cards from spawning during the test to isolate behavior
         game.card_spawn_interval = 1_000_000.0;
         let height = 800.0;
-        let card_speed = 50.0;
+        let card_speed = game.card_speed;
         let flip_y = height - 50.0;
         let time_to_flip = flip_y / card_speed;
 
