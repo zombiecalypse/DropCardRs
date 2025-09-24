@@ -105,23 +105,19 @@ impl Game {
     }
 
     pub fn submit_answer(&mut self, answer: &str) -> bool {
-        let mut correct = false;
-        let mut card_to_remove_index: Option<usize> = None;
-
         let normalized_answer = normalize_string(answer);
-        for (i, card) in self.cards.iter().enumerate() {
-            if !card.flipped && normalize_string(&card.back) == normalized_answer {
-                correct = true;
-                card_to_remove_index = Some(i);
-                break;
-            }
-        }
+        let initial_card_count = self.cards.len();
 
-        if let Some(index) = card_to_remove_index {
-            self.cards.remove(index);
-            self.score += 1;
-        }
+        self.cards.retain(|card| {
+            !(!card.flipped && normalize_string(&card.back) == normalized_answer)
+        });
 
-        correct
+        let removed_count = initial_card_count - self.cards.len();
+        if removed_count > 0 {
+            self.score += removed_count as i32;
+            true
+        } else {
+            false
+        }
     }
 }
