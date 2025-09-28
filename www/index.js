@@ -4,7 +4,6 @@ if (window.isFlashCardGameRunning) {
     window.isFlashCardGameRunning = true;
 
     import('../pkg/flashcards.js').then(async (module) => {
-    await module.default();
     const { Game, GameMode, get_default_deck } = module;
 
     const startScreen = document.getElementById('start-screen');
