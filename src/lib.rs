@@ -132,7 +132,7 @@ impl Default for Game {
 }
 
 #[wasm_bindgen]
-pub fn getDefaultDeck() -> JsValue {
+pub fn get_default_deck() -> JsValue {
     let default_cards: Vec<CustomCard> = cards::CARD_DATA
         .iter()
         .map(|(f, b)| CustomCard {

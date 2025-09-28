@@ -5,7 +5,7 @@ if (window.isFlashCardGameRunning) {
 
     import('../pkg/flashcards.js').then(async (module) => {
     await module.default();
-    const { Game, GameMode, getDefaultDeck } = module;
+    const { Game, GameMode, get_default_deck } = module;
 
     const startScreen = document.getElementById('start-screen');
     const startDefaultBtn = document.getElementById('start-default-btn');
@@ -398,7 +398,7 @@ if (window.isFlashCardGameRunning) {
     });
 
     startDefaultBtn.addEventListener('click', () => {
-        const defaultDeck = getDefaultDeck();
+        const defaultDeck = get_default_deck();
         showDeckConfiguration(defaultDeck);
     });
     
