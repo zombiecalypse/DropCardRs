@@ -94,6 +94,14 @@ impl Default for Game {
     }
 }
 
+impl Game {
+    fn get_available_cards_data(&self) -> &'static [(&'static str, &'static str)] {
+        let num_available_cards = (10 + (self.score / 10) * 5) as usize;
+        let all_cards = cards::CARD_DATA;
+        &all_cards[..num_available_cards.min(all_cards.len())]
+    }
+}
+
 #[wasm_bindgen]
 impl Game {
     pub fn new(width: f64, height: f64, seed: u64, mode: GameMode) -> Game {
@@ -155,13 +163,7 @@ impl Game {
         }
 
         // Remove cards that have been flipped for over 1 second
-        self.cards.retain(|card| {
-            if let Some(time_flipped) = card.time_since_flipped {
-                time_flipped < 1.0
-            } else {
-                true // Keep cards that haven't been flipped
-            }
-        });
+        self.cards.retain(|card| card.time_since_flipped.map_or(true, |time| time < 1.0));
     }
 
     fn spawn_card(&mut self) {
@@ -196,9 +198,7 @@ impl Game {
     }
 
     fn replenish_deck(&mut self) {
-        let num_available_cards = (10 + (self.score / 10) * 5) as usize;
-        let all_cards = cards::CARD_DATA;
-        let available_cards = &all_cards[..num_available_cards.min(all_cards.len())];
+        let available_cards = self.get_available_cards_data();
         self.unlocked_cards_count = available_cards.len();
 
         let mut new_deck: Vec<_> = (0..3)
@@ -220,9 +220,7 @@ impl Game {
     }
 
     pub fn get_unlocked_cards(&self) -> JsValue {
-        let num_available_cards = (10 + (self.score / 10) * 5) as usize;
-        let all_cards = cards::CARD_DATA;
-        let available_cards_data = &all_cards[..num_available_cards.min(all_cards.len())];
+        let available_cards_data = self.get_available_cards_data();
         let unlocked_cards: Vec<UnlockedCard> = match self.mode {
             GameMode::Both => available_cards_data
                 .iter()
