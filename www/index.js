@@ -398,7 +398,8 @@ if (window.isFlashCardGameRunning) {
     });
 
     startDefaultBtn.addEventListener('click', () => {
-        const defaultDeck = DeckUtils.get_default_deck();
+        const deckUtils = new DeckUtils();
+        const defaultDeck = deckUtils.get_default_deck();
         showDeckConfiguration(defaultDeck);
     });
     

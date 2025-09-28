@@ -132,11 +132,18 @@ impl Default for Game {
 }
 
 #[wasm_bindgen]
-pub struct DeckUtils;
+pub struct DeckUtils {
+    _private: (),
+}
 
 #[wasm_bindgen]
 impl DeckUtils {
-    pub fn get_default_deck() -> JsValue {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Self {
+        Self { _private: () }
+    }
+
+    pub fn get_default_deck(&self) -> JsValue {
         let default_cards: Vec<CustomCard> = cards::CARD_DATA
             .iter()
             .map(|(f, b)| CustomCard {
