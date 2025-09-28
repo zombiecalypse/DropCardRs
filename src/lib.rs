@@ -1,5 +1,6 @@
 use wasm_bindgen::prelude::*;
 use serde::{Serialize, Deserialize};
+use std::collections::HashMap;
 use rand_chacha::ChaCha8Rng;
 use rand_chacha::rand_core::SeedableRng;
 use rand::seq::SliceRandom;
@@ -59,6 +60,7 @@ pub struct Game {
     missed_cards: Vec<Card>,
     card_deck: Vec<(String, String)>,
     unlocked_cards_count: usize,
+    card_success_counts: HashMap<String, u32>,
     width: f64,
     height: f64,
     score: i32,
@@ -109,6 +111,7 @@ impl Default for Game {
             missed_cards: vec![],
             card_deck: vec![],
             unlocked_cards_count: 0,
+            card_success_counts: HashMap::new(),
             width: 600.0,
             height: 800.0,
             score: 0,
@@ -264,10 +267,14 @@ impl Game {
     fn replenish_deck(&mut self) {
         let available_cards = self.get_available_cards_data();
 
-        let mut new_deck: Vec<_> = (0..DECK_CARD_DUPLICATES)
-            .flat_map(|_| available_cards)
-            .map(|(front, back)| (front.clone(), back.clone()))
-            .collect();
+        let mut new_deck = Vec::new();
+        for (front, back) in available_cards {
+            let success_count = self.card_success_counts.get(front).cloned().unwrap_or(0);
+            let num_duplicates = (DECK_CARD_DUPLICATES as i32 - success_count as i32).max(1) as u32;
+            for _ in 0..num_duplicates {
+                new_deck.push((front.clone(), back.clone()));
+            }
+        }
 
         self.unlocked_cards_count = available_cards.len();
         new_deck.shuffle(&mut self.rng);
@@ -364,22 +371,29 @@ impl Game {
             return false;
         }
         let normalized_answer = normalize_string(answer);
-        let initial_card_count = self.cards.len();
 
-        self.cards.retain(|card| !(!card.flipped && card.back.split('/').any(|ans| normalize_string(ans.trim()) == normalized_answer)));
+        let (removed_cards, kept_cards): (Vec<Card>, Vec<Card>) = self.cards.drain(..).partition(|card| {
+            !card.flipped && card.back.split('/').any(|ans| normalize_string(ans.trim()) == normalized_answer)
+        });
 
-        let removed_count = initial_card_count - self.cards.len();
+        self.cards = kept_cards;
         
-        let correct = removed_count > 0;
+        let correct = !removed_cards.is_empty();
         if correct {
-            self.handle_correct_answer(removed_count as i32);
+            self.handle_correct_answer(&removed_cards);
         }
         correct
     }
 
-    fn handle_correct_answer(&mut self, removed_count: i32) {
+    fn handle_correct_answer(&mut self, removed_cards: &[Card]) {
+        let removed_count = removed_cards.len() as i32;
         self.score += removed_count;
         self.score_since_last_heart += removed_count;
+
+        for card in removed_cards {
+            let count = self.card_success_counts.entry(card.raw_front.clone()).or_insert(0);
+            *count += 1;
+        }
 
         // Check if new cards were unlocked and replenish deck if so
         let num_unlocked_cards = self.get_available_cards_data().len();
