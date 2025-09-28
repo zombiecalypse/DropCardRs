@@ -8,6 +8,29 @@ use unidecode::unidecode;
 
 mod cards;
 
+// Game constants
+const CARD_WIDTH: f64 = 150.0;
+const CARD_HEIGHT: f64 = 50.0;
+
+// Deck and card unlocking constants
+const INITIAL_UNLOCKED_CARDS: usize = 10;
+const SCORE_PER_CARD_UNLOCK: i32 = 10;
+const CARDS_PER_UNLOCK: usize = 5;
+const DECK_CARD_DUPLICATES: u32 = 3;
+
+// Difficulty scaling constants
+const INITIAL_MAX_CARDS: usize = 1;
+const SCORE_PER_MAX_CARD_INCREASE: i32 = 10;
+const INITIAL_SPAWN_INTERVAL: f64 = 3.0;
+const MIN_SPAWN_INTERVAL: f64 = 0.5;
+const SCORE_PER_SPAWN_INTERVAL_DECREASE: i32 = 5;
+const SPAWN_INTERVAL_DECREASE: f64 = 0.25;
+const INITIAL_CARD_SPEED: f64 = 50.0;
+const CARD_SPEED_INCREASE_PER_SCORE: f64 = 2.0;
+
+// Health and scoring constants
+const SCORE_PER_HEART: i32 = 5;
+
 #[wasm_bindgen]
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub enum GameMode {
@@ -78,8 +101,8 @@ impl Default for Game {
             height: 800.0,
             score: 0,
             time_since_last_card: 0.0,
-            card_spawn_interval: 3.0,
-            card_speed: 50.0,
+            card_spawn_interval: INITIAL_SPAWN_INTERVAL,
+            card_speed: INITIAL_CARD_SPEED,
             health: 3,
             max_health: 5,
             score_since_last_heart: 0,
@@ -96,7 +119,8 @@ impl Default for Game {
 
 impl Game {
     fn get_available_cards_data(&self) -> &'static [(&'static str, &'static str)] {
-        let num_available_cards = (10 + (self.score / 10) * 5) as usize;
+        let num_available_cards = (INITIAL_UNLOCKED_CARDS
+            + (self.score / SCORE_PER_CARD_UNLOCK) as usize * CARDS_PER_UNLOCK);
         let all_cards = cards::CARD_DATA;
         &all_cards[..num_available_cards.min(all_cards.len())]
     }
@@ -131,7 +155,7 @@ impl Game {
 
     fn spawn_new_cards(&mut self, dt: f64) {
         self.time_since_last_card += dt;
-        let max_cards = 1 + (self.score / 10) as usize;
+        let max_cards = INITIAL_MAX_CARDS + (self.score / SCORE_PER_MAX_CARD_INCREASE) as usize;
 
         if self.time_since_last_card > self.card_spawn_interval && self.cards.len() < max_cards {
             self.spawn_card();
@@ -147,8 +171,8 @@ impl Game {
                 }
             } else {
                 card.y += self.card_speed * dt;
-                if card.y >= self.height - 50.0 { // 50 is card height
-                    card.y = self.height - 50.0; // Stop at the bottom
+                if card.y >= self.height - CARD_HEIGHT { // 50 is card height
+                    card.y = self.height - CARD_HEIGHT; // Stop at the bottom
                     card.flipped = true;
                     card.time_since_flipped = Some(0.0);
                     if !self.game_over {
@@ -184,7 +208,7 @@ impl Game {
                 id: self.next_card_id,
                 front,
                 back,
-                x: self.rng.random_range(0.0..(self.width - 150.0)),
+                x: self.rng.random_range(0.0..(self.width - CARD_WIDTH)),
                 y: 0.0,
                 flipped: false,
                 time_since_flipped: None,
@@ -197,7 +221,7 @@ impl Game {
         let available_cards = self.get_available_cards_data();
         self.unlocked_cards_count = available_cards.len();
 
-        let mut new_deck: Vec<_> = (0..3)
+        let mut new_deck: Vec<_> = (0..DECK_CARD_DUPLICATES)
             .flat_map(|_| available_cards)
             .map(|&(front, back)| (front.to_string(), back.to_string()))
             .collect();
@@ -314,14 +338,16 @@ impl Game {
         }
 
         // Update difficulty
-        self.card_spawn_interval = (3.0 - (self.score / 5) as f64 * 0.25).max(0.5);
-        self.card_speed = 50.0 + (self.score as f64 * 2.0);
+        self.card_spawn_interval = (INITIAL_SPAWN_INTERVAL
+            - (self.score / SCORE_PER_SPAWN_INTERVAL_DECREASE) as f64 * SPAWN_INTERVAL_DECREASE)
+            .max(MIN_SPAWN_INTERVAL);
+        self.card_speed = INITIAL_CARD_SPEED + (self.score as f64 * CARD_SPEED_INCREASE_PER_SCORE);
 
         // Update health
-        let hearts_to_gain = self.score_since_last_heart / 5;
+        let hearts_to_gain = self.score_since_last_heart / SCORE_PER_HEART;
         if hearts_to_gain > 0 {
             self.health = (self.health + hearts_to_gain).min(self.max_health);
-            self.score_since_last_heart %= 5;
+            self.score_since_last_heart %= SCORE_PER_HEART;
         }
     }
 }
@@ -418,7 +444,7 @@ mod tests {
 
         // Tick to just before the flip threshold
         let card_speed = game.card_speed;
-        let flip_y = height - 50.0;
+        let flip_y = height - CARD_HEIGHT;
         let time_to_flip = flip_y / card_speed;
         
         game.tick(time_to_flip - 0.1);
@@ -535,14 +561,14 @@ mod tests {
             Card { id: 3, front: "Q4".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
             Card { id: 4, front: "Q5".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
         ];
-        assert_eq!(game.card_spawn_interval, 3.0);
-        assert_eq!(game.card_speed, 50.0);
+        assert_eq!(game.card_spawn_interval, INITIAL_SPAWN_INTERVAL);
+        assert_eq!(game.card_speed, INITIAL_CARD_SPEED);
 
         game.submit_answer("A");
 
         assert_eq!(game.get_score(), 5);
-        assert_eq!(game.card_spawn_interval, 2.75);
-        assert_eq!(game.card_speed, 50.0 + (5.0 * 2.0));
+        assert_eq!(game.card_spawn_interval, INITIAL_SPAWN_INTERVAL - SPAWN_INTERVAL_DECREASE);
+        assert_eq!(game.card_speed, INITIAL_CARD_SPEED + (5.0 * CARD_SPEED_INCREASE_PER_SCORE));
     }
 
     #[wasm_bindgen_test]
@@ -550,8 +576,8 @@ mod tests {
         let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal);
         
         // Initial state: 10 cards unlocked, deck has 30 cards, one is spawned
-        assert_eq!(game.unlocked_cards_count, 10);
-        assert_eq!(game.card_deck.len(), 10 * 3 - 1);
+        assert_eq!(game.unlocked_cards_count, INITIAL_UNLOCKED_CARDS);
+        assert_eq!(game.card_deck.len(), INITIAL_UNLOCKED_CARDS * DECK_CARD_DUPLICATES as usize - 1);
 
         // Score enough points to unlock more cards (score 10)
         game.score = 9; // set score to 9 to be just before the threshold
@@ -564,8 +590,8 @@ mod tests {
         // After scoring, new cards are unlocked, and deck is replenished.
         // 15 cards should be unlocked (10 initial + 5 new).
         // Deck should have 15 * 3 = 45 cards.
-        assert_eq!(game.unlocked_cards_count, 15);
-        assert_eq!(game.card_deck.len(), 15 * 3);
+        assert_eq!(game.unlocked_cards_count, INITIAL_UNLOCKED_CARDS + CARDS_PER_UNLOCK);
+        assert_eq!(game.card_deck.len(), (INITIAL_UNLOCKED_CARDS + CARDS_PER_UNLOCK) * DECK_CARD_DUPLICATES as usize);
     }
 
     #[wasm_bindgen_test]
