@@ -199,6 +199,9 @@ if (window.isFlashCardGameRunning) {
     let lastTime = 0;
     let lastLogTime = 0;
     function gameLoop(timestamp) {
+        if (lastTime === 0) {
+            lastTime = timestamp;
+        }
         const deltaTime = (timestamp - lastTime) / 1000; // in seconds
         lastTime = timestamp;
 
