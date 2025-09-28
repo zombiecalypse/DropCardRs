@@ -1,3 +1,29 @@
+.hidden {
+    display: none !important;
+}
+
+#start-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+#start-screen .button, #start-screen button {
+    padding: 10px 20px;
+    font-size: 1.2em;
+    cursor: pointer;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: #f0f0f0;
+}
+
+#start-screen .button {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
 body {
     font-family: sans-serif;
     display: flex;

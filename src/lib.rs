@@ -76,6 +76,7 @@ pub struct Game {
     mode: GameMode,
     next_card_id: u32,
     speed_multiplier: f64,
+    card_data: Vec<(String, String)>,
 }
 
 fn normalize_string(s: &str) -> String {
@@ -93,6 +94,12 @@ fn normalize_string(s: &str) -> String {
 struct UnlockedCard<'a> {
     front: &'a str,
     back: &'a str,
+}
+
+#[derive(Deserialize)]
+struct CustomCard {
+    front: String,
+    back: String,
 }
 
 impl Default for Game {
@@ -119,16 +126,16 @@ impl Default for Game {
             mode: GameMode::default(),
             next_card_id: 0,
             speed_multiplier: 1.0,
+            card_data: vec![],
         }
     }
 }
 
 impl Game {
-    fn get_available_cards_data(&self) -> &'static [(&'static str, &'static str)] {
+    fn get_available_cards_data(&self) -> &[(String, String)] {
         let num_available_cards = INITIAL_UNLOCKED_CARDS
             + (self.score / SCORE_PER_CARD_UNLOCK) as usize * CARDS_PER_UNLOCK;
-        let all_cards = cards::CARD_DATA;
-        &all_cards[..num_available_cards.min(all_cards.len())]
+        &self.card_data[..num_available_cards.min(self.card_data.len())]
     }
 }
 
@@ -148,9 +155,43 @@ impl Game {
             speed_multiplier,
             ..Self::default()
         };
+        game.card_data = cards::CARD_DATA
+            .iter()
+            .map(|(f, b)| (f.to_string(), b.to_string()))
+            .collect();
         game.card_speed *= speed_multiplier;
         game.spawn_card();
         game
+    }
+
+    pub fn new_with_custom_deck(width: f64, height: f64, seed: u64, mode: GameMode, speed_multiplier: f64, custom_deck: JsValue) -> Result<Game, JsValue> {
+        let custom_cards: Vec<CustomCard> = serde_wasm_bindgen::from_value(custom_deck)?;
+        let card_data: Vec<(String, String)> = custom_cards
+            .into_iter()
+            .map(|c| (c.front, c.back))
+            .collect();
+
+        if card_data.is_empty() {
+            return Err(JsValue::from_str("Custom deck cannot be empty."));
+        }
+
+        let mut rng = ChaCha8Rng::seed_from_u64(seed);
+        let game_id = rng.random::<u32>();
+
+        let mut game = Game {
+            width,
+            height,
+            rng,
+            rng_seed: seed,
+            game_id,
+            mode,
+            speed_multiplier,
+            ..Self::default()
+        };
+        game.card_data = card_data;
+        game.card_speed *= speed_multiplier;
+        game.spawn_card();
+        Ok(game)
     }
 
     pub fn tick(&mut self, dt: f64) {
@@ -636,7 +677,7 @@ mod tests {
         }
         let cards: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
         
-        let original_fronts: HashSet<&str> = cards::CARD_DATA.iter().map(|(f, _)| *f).collect();
+        let original_fronts: HashSet<&str> = game.card_data.iter().map(|(f, _)| f.as_str()).collect();
         let welsh_fronts = cards
             .iter()
             .filter(|c| original_fronts.contains(c.front.as_str()))

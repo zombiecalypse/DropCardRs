@@ -47,7 +47,20 @@ if (window.isFlashCardGameRunning) {
     const speedMultiplier = isMobile ? 0.75 : 1.0;
     
     const seed = Math.floor(Math.random() * 2**32);
-    const game = Game.new(GAME_WIDTH, GAME_HEIGHT, seed, mode, speedMultiplier);
+    let game;
+    try {
+        if (customDeck) {
+            game = Game.new_with_custom_deck(GAME_WIDTH, GAME_HEIGHT, seed, mode, speedMultiplier, customDeck);
+        } else {
+            game = Game.new(GAME_WIDTH, GAME_HEIGHT, seed, mode, speedMultiplier);
+        }
+    } catch (e) {
+        alert(`Error initializing game: ${e}`);
+        startScreen.classList.remove('hidden');
+        gameContainer.classList.add('hidden');
+        ankiImportInput.value = '';
+        return;
+    }
     const gameId = game.get_id();
     console.log(`[Game ${gameId}] Initialized.`);
     const cardsContainer = document.getElementById('cards-container');
@@ -295,11 +308,46 @@ if (window.isFlashCardGameRunning) {
 
     animationFrameId = requestAnimationFrame(gameLoop);
 
-    if (module.hot) {
-        module.hot.dispose(() => {
-            // A full reload is the most robust way to handle HMR
-            window.location.reload();
-        });
+        if (module.hot) {
+            module.hot.dispose(() => {
+                // A full reload is the most robust way to handle HMR
+                window.location.reload();
+            });
+        }
     }
+
+    startDefaultBtn.addEventListener('click', () => startGame());
+    
+    ankiImportInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (!file) {
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const text = e.target.result;
+            const lines = text.split('\n').filter(line => line.trim() !== '');
+            const deck = lines.map(line => {
+                // Ignore comment lines in Anki exports
+                if (line.startsWith('#')) return null;
+                const parts = line.split(';');
+                if (parts.length >= 2) {
+                    // Taking first two fields, ignoring others
+                    return { front: parts[0].trim(), back: parts[1].trim() };
+                }
+                return null;
+            }).filter(Boolean);
+
+            if (deck.length > 0) {
+                startGame(deck);
+            } else {
+                alert('Could not parse deck. Make sure it is a CSV file with "front;back" format, separated by semicolons.');
+                ankiImportInput.value = '';
+            }
+        };
+        reader.readAsText(file);
+    });
+
     }).catch(console.error);
 }

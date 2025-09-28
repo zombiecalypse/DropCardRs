@@ -7,7 +7,13 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="game-container">
+    <div id="start-screen">
+        <h1>DropCardRs</h1>
+        <button id="start-default-btn">Play with Default Deck</button>
+        <label for="anki-import-input" class="button">Import Anki Deck (.csv)</label>
+        <input type="file" id="anki-import-input" accept=".csv" style="display: none;">
+    </div>
+    <div id="game-container" class="hidden">
         <div id="top-ui">
             <div id="score">Score: 0</div>
             <div id="health"></div>
