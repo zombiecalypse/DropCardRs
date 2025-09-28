@@ -72,6 +72,7 @@ pub struct Game {
     game_id: u32,
     mode: GameMode,
     next_card_id: u32,
+    speed_multiplier: f64,
 }
 
 fn normalize_string(s: &str) -> String {
@@ -113,6 +114,7 @@ impl Default for Game {
             game_id: 0,
             mode: GameMode::default(),
             next_card_id: 0,
+            speed_multiplier: 1.0,
         }
     }
 }
@@ -128,7 +130,7 @@ impl Game {
 
 #[wasm_bindgen]
 impl Game {
-    pub fn new(width: f64, height: f64, seed: u64, mode: GameMode) -> Game {
+    pub fn new(width: f64, height: f64, seed: u64, mode: GameMode, speed_multiplier: f64) -> Game {
         let mut rng = ChaCha8Rng::seed_from_u64(seed);
         let game_id = rng.random::<u32>();
 
@@ -139,8 +141,10 @@ impl Game {
             rng_seed: seed,
             game_id,
             mode,
+            speed_multiplier,
             ..Self::default()
         };
+        game.card_speed *= speed_multiplier;
         game.spawn_card();
         game
     }
@@ -306,9 +310,11 @@ impl Game {
             game_id: self.game_id,
             mode: self.mode,
             max_health: self.max_health,
+            speed_multiplier: self.speed_multiplier,
             rng: ChaCha8Rng::seed_from_u64(self.rng_seed),
             ..Self::default()
         };
+        self.card_speed *= self.speed_multiplier;
         self.spawn_card();
     }
 
@@ -344,7 +350,7 @@ impl Game {
         self.card_spawn_interval = (INITIAL_SPAWN_INTERVAL
             - (self.score / SCORE_PER_SPAWN_INTERVAL_DECREASE) as f64 * SPAWN_INTERVAL_DECREASE)
             .max(MIN_SPAWN_INTERVAL);
-        self.card_speed = INITIAL_CARD_SPEED + (self.score as f64 * CARD_SPEED_INCREASE_PER_SCORE);
+        self.card_speed = (INITIAL_CARD_SPEED + (self.score as f64 * CARD_SPEED_INCREASE_PER_SCORE)) * self.speed_multiplier;
 
         // Update health
         let hearts_to_gain = self.score_since_last_heart / SCORE_PER_HEART;

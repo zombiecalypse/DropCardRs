@@ -42,9 +42,12 @@ if (window.isFlashCardGameRunning) {
         mode = GameMode.Both;
     }
     const isDebug = urlParams.get('debug') === 'true';
+
+    const isMobile = window.innerWidth <= 600;
+    const speedMultiplier = isMobile ? 0.75 : 1.0;
     
     const seed = Math.floor(Math.random() * 2**32);
-    const game = Game.new(GAME_WIDTH, GAME_HEIGHT, seed, mode);
+    const game = Game.new(GAME_WIDTH, GAME_HEIGHT, seed, mode, speedMultiplier);
     const gameId = game.get_id();
     console.log(`[Game ${gameId}] Initialized.`);
     const cardsContainer = document.getElementById('cards-container');
