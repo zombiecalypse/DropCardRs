@@ -131,6 +131,30 @@ body {
     transform: rotateX(180deg);
 }
 
+.shields-container {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    display: flex;
+    gap: 1px;
+}
+
+.shield {
+    font-size: 10px;
+    opacity: 0.8;
+}
+
+.shield.lost {
+    animation: shield-lost-animation 0.5s forwards;
+}
+
+@keyframes shield-lost-animation {
+    to {
+        transform: translateY(-20px) scale(0.5);
+        opacity: 0;
+    }
+}
+
 #game-over-screen {
     position: absolute;
     top: 0;

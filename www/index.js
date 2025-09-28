@@ -81,6 +81,7 @@ if (window.isFlashCardGameRunning) {
 
     let debugPane = null;
     let cardElements = new Map();
+    let previousCardStates = new Map();
 
     if (isDebug) {
         debugPane = document.createElement('div');
@@ -272,6 +273,26 @@ if (window.isFlashCardGameRunning) {
                 const back = document.createElement('div');
                 back.className = 'back';
                 cardElement.appendChild(back);
+
+                const shieldsContainer = document.createElement('div');
+                shieldsContainer.className = 'shields-container';
+                for (let i = 0; i < card.free_misses; i++) {
+                    const shield = document.createElement('span');
+                    shield.className = 'shield';
+                    shield.textContent = '🛡️';
+                    shieldsContainer.appendChild(shield);
+                }
+                cardElement.appendChild(shieldsContainer);
+            }
+
+            const previousState = previousCardStates.get(card.id);
+            if (previousState && !previousState.flipped && card.flipped && card.free_misses > 0) {
+                const shields = cardElement.querySelectorAll('.shields-container .shield');
+                if (shields.length > 0) {
+                    const lostShield = shields[shields.length - 1];
+                    lostShield.classList.add('lost');
+                    lostShield.addEventListener('animationend', () => lostShield.remove());
+                }
             }
             
             // Update common properties
@@ -280,7 +301,7 @@ if (window.isFlashCardGameRunning) {
             } else {
                 cardElement.classList.remove('flipped');
             }
-            if (card.is_new) {
+            if (card.free_misses > 0) {
                 cardElement.classList.add('new');
             } else {
                 cardElement.classList.remove('new');
@@ -323,6 +344,8 @@ if (window.isFlashCardGameRunning) {
         } else {
             pauseScreen.style.display = 'none';
         }
+
+        previousCardStates = new Map(currentCards.map(c => [c.id, { ...c }]));
     }
 
     animationFrameId = requestAnimationFrame(gameLoop);

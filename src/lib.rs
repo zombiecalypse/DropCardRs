@@ -52,7 +52,7 @@ pub struct Card {
     pub y: f64,
     pub flipped: bool,
     pub time_since_flipped: Option<f64>,
-    pub is_new: bool,
+    pub free_misses: u32,
 }
 
 #[wasm_bindgen]
@@ -282,7 +282,7 @@ impl Game {
                 y: 0.0,
                 flipped: false,
                 time_since_flipped: None,
-                is_new: miss_count < 2,
+                free_misses: (2 - miss_count).max(0),
             });
             self.next_card_id += 1;
         }
@@ -496,7 +496,7 @@ mod tests {
     fn test_submit_correct_answer() {
         let mut game = new_game_for_test(600.0, 800.0, 0, GameMode::Normal, 1.0);
         game.cards = vec![
-            Card { id: 0, raw_front: "Q".to_string(), raw_back: "Answer1 / Answer2".to_string(), front: "Q".to_string(), back: "Answer1 / Answer2".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: false },
+            Card { id: 0, raw_front: "Q".to_string(), raw_back: "Answer1 / Answer2".to_string(), front: "Q".to_string(), back: "Answer1 / Answer2".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, free_misses: 0 },
         ];
         assert_eq!(game.get_score(), 0);
         assert!(game.submit_answer("Answer2"));
@@ -509,7 +509,7 @@ mod tests {
     fn test_submit_incorrect_answer() {
         let mut game = new_game_for_test(600.0, 800.0, 0, GameMode::Normal, 1.0);
         game.cards = vec![
-            Card { id: 0, raw_front: "Q".to_string(), raw_back: "Answer".to_string(), front: "Q".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: false },
+            Card { id: 0, raw_front: "Q".to_string(), raw_back: "Answer".to_string(), front: "Q".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, free_misses: 0 },
         ];
         assert_eq!(game.get_score(), 0);
         assert!(!game.submit_answer("Wrong"));
@@ -522,7 +522,7 @@ mod tests {
     fn test_submit_answer_normalization() {
         let mut game = new_game_for_test(600.0, 800.0, 0, GameMode::Normal, 1.0);
         game.cards = vec![
-            Card { id: 0, raw_front: "Q".to_string(), raw_back: "Answer One / How are you?".to_string(), front: "Q".to_string(), back: "Answer One / How are you?".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: false },
+            Card { id: 0, raw_front: "Q".to_string(), raw_back: "Answer One / How are you?".to_string(), front: "Q".to_string(), back: "Answer One / How are you?".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, free_misses: 0 },
         ];
         assert!(game.submit_answer("  how ARE you?? "));
         let cards: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
@@ -533,7 +533,7 @@ mod tests {
     fn test_submit_answer_with_diacritics() {
         let mut game = new_game_for_test(600.0, 800.0, 0, GameMode::Normal, 1.0);
         game.cards = vec![
-            Card { id: 0, raw_front: "Q".to_string(), raw_back: "crème brûlée".to_string(), front: "Q".to_string(), back: "crème brûlée".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: false },
+            Card { id: 0, raw_front: "Q".to_string(), raw_back: "crème brûlée".to_string(), front: "Q".to_string(), back: "crème brûlée".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, free_misses: 0 },
         ];
         assert!(game.submit_answer("creme brulee"));
         let cards: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
@@ -544,9 +544,9 @@ mod tests {
     fn test_submit_answer_resolves_multiple_cards() {
         let mut game = new_game_for_test(600.0, 800.0, 0, GameMode::Normal, 1.0);
         game.cards = vec![
-            Card { id: 0, raw_front: "Q1".to_string(), raw_back: "Answer".to_string(), front: "Q1".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: false },
-            Card { id: 1, raw_front: "Q2".to_string(), raw_back: "Answer".to_string(), front: "Q2".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: false },
-            Card { id: 2, raw_front: "Q3".to_string(), raw_back: "Different".to_string(), front: "Q3".to_string(), back: "Different".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: false },
+            Card { id: 0, raw_front: "Q1".to_string(), raw_back: "Answer".to_string(), front: "Q1".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, free_misses: 0 },
+            Card { id: 1, raw_front: "Q2".to_string(), raw_back: "Answer".to_string(), front: "Q2".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, free_misses: 0 },
+            Card { id: 2, raw_front: "Q3".to_string(), raw_back: "Different".to_string(), front: "Q3".to_string(), back: "Different".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, free_misses: 0 },
         ];
         assert_eq!(game.get_score(), 0);
         assert!(game.submit_answer("answer"));
@@ -562,7 +562,7 @@ mod tests {
         let mut game = new_game_for_test(600.0, height, 0, GameMode::Normal, 1.0);
         game.card_miss_counts.insert("Q".to_string(), 2); // Mark card as not new
         game.cards = vec![
-            Card { id: 0, raw_front: "Q".to_string(), raw_back: "A".to_string(), front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: false },
+            Card { id: 0, raw_front: "Q".to_string(), raw_back: "A".to_string(), front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, free_misses: 0 },
         ];
         // Prevent new cards from spawning during the test to isolate behavior
         game.card_spawn_interval = 1_000_000.0;
@@ -597,11 +597,11 @@ mod tests {
         let mut game = new_game_for_test(600.0, 800.0, 0, GameMode::Normal, 1.0);
         game.health = 1; // set health low to test gain
         game.cards = vec![
-            Card { id: 0, raw_front: "Q1".to_string(), raw_back: "A".to_string(), front: "Q1".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: false },
-            Card { id: 1, raw_front: "Q2".to_string(), raw_back: "A".to_string(), front: "Q2".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: false },
-            Card { id: 2, raw_front: "Q3".to_string(), raw_back: "A".to_string(), front: "Q3".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: false },
-            Card { id: 3, raw_front: "Q4".to_string(), raw_back: "A".to_string(), front: "Q4".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: false },
-            Card { id: 4, raw_front: "Q5".to_string(), raw_back: "A".to_string(), front: "Q5".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: false },
+            Card { id: 0, raw_front: "Q1".to_string(), raw_back: "A".to_string(), front: "Q1".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, free_misses: 0 },
+            Card { id: 1, raw_front: "Q2".to_string(), raw_back: "A".to_string(), front: "Q2".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, free_misses: 0 },
+            Card { id: 2, raw_front: "Q3".to_string(), raw_back: "A".to_string(), front: "Q3".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, free_misses: 0 },
+            Card { id: 3, raw_front: "Q4".to_string(), raw_back: "A".to_string(), front: "Q4".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, free_misses: 0 },
+            Card { id: 4, raw_front: "Q5".to_string(), raw_back: "A".to_string(), front: "Q5".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, free_misses: 0 },
         ];
         assert!(game.submit_answer("A"));
         assert_eq!(game.get_score(), 5);
@@ -616,7 +616,7 @@ mod tests {
         game.health = 1;
         game.card_miss_counts.insert("Q".to_string(), 2); // Mark card as not new
         game.cards = vec![
-            Card { id: 0, raw_front: "Q".to_string(), raw_back: "A".to_string(), front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: false },
+            Card { id: 0, raw_front: "Q".to_string(), raw_back: "A".to_string(), front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, free_misses: 0 },
         ];
         // Prevent new cards from spawning during the test to isolate behavior
         game.card_spawn_interval = 1_000_000.0;
@@ -647,7 +647,7 @@ mod tests {
     fn test_pause_and_resume() {
         let mut game = new_game_for_test(600.0, 800.0, 0, GameMode::Normal, 1.0);
         game.cards = vec![
-            Card { id: 0, raw_front: "Q".to_string(), raw_back: "A".to_string(), front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 10.0, flipped: false, time_since_flipped: None, is_new: false },
+            Card { id: 0, raw_front: "Q".to_string(), raw_back: "A".to_string(), front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 10.0, flipped: false, time_since_flipped: None, free_misses: 0 },
         ];
 
         game.pause();
@@ -681,11 +681,11 @@ mod tests {
     fn test_difficulty_increases_with_score() {
         let mut game = new_game_for_test(600.0, 800.0, 0, GameMode::Normal, 1.0);
         game.cards = vec![
-            Card { id: 0, raw_front: "Q1".to_string(), raw_back: "A".to_string(), front: "Q1".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: false },
-            Card { id: 1, raw_front: "Q2".to_string(), raw_back: "A".to_string(), front: "Q2".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: false },
-            Card { id: 2, raw_front: "Q3".to_string(), raw_back: "A".to_string(), front: "Q3".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: false },
-            Card { id: 3, raw_front: "Q4".to_string(), raw_back: "A".to_string(), front: "Q4".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: false },
-            Card { id: 4, raw_front: "Q5".to_string(), raw_back: "A".to_string(), front: "Q5".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: false },
+            Card { id: 0, raw_front: "Q1".to_string(), raw_back: "A".to_string(), front: "Q1".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, free_misses: 0 },
+            Card { id: 1, raw_front: "Q2".to_string(), raw_back: "A".to_string(), front: "Q2".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, free_misses: 0 },
+            Card { id: 2, raw_front: "Q3".to_string(), raw_back: "A".to_string(), front: "Q3".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, free_misses: 0 },
+            Card { id: 3, raw_front: "Q4".to_string(), raw_back: "A".to_string(), front: "Q4".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, free_misses: 0 },
+            Card { id: 4, raw_front: "Q5".to_string(), raw_back: "A".to_string(), front: "Q5".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, free_misses: 0 },
         ];
         assert_eq!(game.card_spawn_interval, INITIAL_SPAWN_INTERVAL);
         assert_eq!(game.card_speed, INITIAL_CARD_SPEED);
@@ -708,7 +708,7 @@ mod tests {
         // Score enough points to unlock more cards (score 10)
         game.score = 9; // set score to 9 to be just before the threshold
         game.cards = vec![
-            Card { id: game.next_card_id, raw_front: "Q".to_string(), raw_back: "A".to_string(), front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: false },
+            Card { id: game.next_card_id, raw_front: "Q".to_string(), raw_back: "A".to_string(), front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, free_misses: 0 },
         ];
         game.submit_answer("A");
         assert_eq!(game.get_score(), 10);
@@ -807,7 +807,7 @@ mod tests {
         // --- Test miss count ---
         let card_q = "Q".to_string();
         game.cards = vec![
-            Card { id: 0, raw_front: card_q.clone(), raw_back: "A".to_string(), front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: true },
+            Card { id: 0, raw_front: card_q.clone(), raw_back: "A".to_string(), front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, free_misses: 2 },
         ];
         game.card_spawn_interval = 1_000_000.0; // prevent more spawns
 
@@ -824,7 +824,7 @@ mod tests {
         // --- Test success count ---
         let card_q2 = "Q2".to_string();
         game.cards = vec![
-            Card { id: 1, raw_front: card_q2.clone(), raw_back: "A2".to_string(), front: "Q2".to_string(), back: "A2".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: true },
+            Card { id: 1, raw_front: card_q2.clone(), raw_back: "A2".to_string(), front: "Q2".to_string(), back: "A2".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, free_misses: 2 },
         ];
         
         assert!(game.submit_answer("A2"));
