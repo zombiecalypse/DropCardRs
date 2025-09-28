@@ -29,8 +29,9 @@ if (window.isFlashCardGameRunning) {
     `;
     document.head.appendChild(style);
 
-    const GAME_WIDTH = 600;
-    const GAME_HEIGHT = 800;
+    const gameBoard = document.getElementById('game-board');
+    const GAME_WIDTH = gameBoard.clientWidth;
+    const GAME_HEIGHT = gameBoard.clientHeight;
 
     const urlParams = new URLSearchParams(window.location.search);
     const mode_str = urlParams.get('mode');
@@ -46,12 +47,13 @@ if (window.isFlashCardGameRunning) {
     const game = Game.new(GAME_WIDTH, GAME_HEIGHT, seed, mode);
     const gameId = game.get_id();
     console.log(`[Game ${gameId}] Initialized.`);
-    const gameBoard = document.getElementById('game-board');
     const cardsContainer = document.getElementById('cards-container');
     const scoreElement = document.getElementById('score');
     const healthElement = document.getElementById('health');
     const gameOverScreen = document.getElementById('game-over-screen');
     const answerInput = document.getElementById('answer-input');
+    const submitBtn = document.getElementById('submit-btn');
+    const pauseBtn = document.getElementById('pause-btn');
 
     let debugPane = null;
     let cardElements = new Map();
@@ -103,31 +105,36 @@ if (window.isFlashCardGameRunning) {
     });
     gameBoard.appendChild(pauseScreen);
 
+    function handleSubmit() {
+        if (game.is_game_over()) {
+            game.restart();
+            gameOverScreen.classList.add('hidden');
+            pauseScreen.style.display = 'none';
+            answerInput.focus();
+        } else if (game.is_paused()) {
+            game.resume();
+        } else {
+            const answer = answerInput.value;
+            if (answer) {
+                if (!game.submit_answer(answer)) {
+                    gameBoard.classList.add('shake');
+                    setTimeout(() => {
+                        gameBoard.classList.remove('shake');
+                    }, 500);
+                }
+                answerInput.value = '';
+            }
+        }
+    }
+
     answerHandler = (event) => {
         if (event.key === 'Enter') {
             event.preventDefault();
-            if (game.is_game_over()) {
-                game.restart();
-                gameOverScreen.classList.add('hidden');
-                pauseScreen.style.display = 'none';
-                answerInput.focus();
-            } else if (game.is_paused()) {
-                game.resume();
-            } else {
-                const answer = answerInput.value;
-                if (answer) {
-                    if (!game.submit_answer(answer)) {
-                        gameBoard.classList.add('shake');
-                        setTimeout(() => {
-                            gameBoard.classList.remove('shake');
-                        }, 500);
-                    }
-                    answerInput.value = '';
-                }
-            }
+            handleSubmit();
         }
     };
     answerInput.addEventListener('keydown', answerHandler);
+    submitBtn.addEventListener('click', handleSubmit);
 
     tabKeyHandler = (event) => {
         if (event.key === 'Tab' && !game.is_game_over()) {
@@ -136,6 +143,12 @@ if (window.isFlashCardGameRunning) {
         }
     };
     document.addEventListener('keydown', tabKeyHandler);
+
+    pauseBtn.addEventListener('click', () => {
+        if (!game.is_game_over()) {
+            game.pause();
+        }
+    });
 
     visibilityChangeHandler = () => {
         if (document.hidden && !game.is_game_over()) {
