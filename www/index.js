@@ -242,9 +242,13 @@ if (window.isFlashCardGameRunning) {
 
         if (isDebug && debugPane) {
             const unlockedCards = game.get_unlocked_cards();
+            const successCounts = game.get_card_success_counts();
+            const missCounts = game.get_card_miss_counts();
             let content = '<h3>Unlocked Cards</h3><ul>';
             for (const card of unlockedCards) {
-                content += `<li><b>${card.front}</b> - ${card.back}</li>`;
+                const success = successCounts[card.front] || 0;
+                const miss = missCounts[card.front] || 0;
+                content += `<li><b>${card.front}</b> - ${card.back} (S: ${success}, M: ${miss})</li>`;
             }
             content += '</ul>';
             debugPane.innerHTML = content;

@@ -339,6 +339,14 @@ impl Game {
         serde_wasm_bindgen::to_value(&self.missed_cards).unwrap()
     }
 
+    pub fn get_card_success_counts(&self) -> JsValue {
+        serde_wasm_bindgen::to_value(&self.card_success_counts).unwrap()
+    }
+
+    pub fn get_card_miss_counts(&self) -> JsValue {
+        serde_wasm_bindgen::to_value(&self.card_miss_counts).unwrap()
+    }
+
     pub fn get_score(&self) -> i32 {
         self.score
     }
