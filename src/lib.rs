@@ -112,6 +112,17 @@ struct CustomCard {
     back: String,
 }
 
+#[derive(Serialize)]
+struct RenderableCard<'a> {
+    id: u32,
+    front: &'a str,
+    back: &'a str,
+    x: f64,
+    y: f64,
+    flipped: bool,
+    free_misses: u32,
+}
+
 impl Default for Game {
     fn default() -> Self {
         Self {
@@ -371,6 +382,22 @@ impl Game {
         serde_wasm_bindgen::to_value(&self.cards).unwrap()
     }
 
+    pub fn get_cards_for_render(&self) -> JsValue {
+        let render_cards: Vec<RenderableCard> = self.cards
+            .iter()
+            .map(|card| RenderableCard {
+                id: card.id,
+                front: &card.front,
+                back: &card.back,
+                x: card.x,
+                y: card.y,
+                flipped: card.flipped,
+                free_misses: card.free_misses,
+            })
+            .collect();
+        serde_wasm_bindgen::to_value(&render_cards).unwrap()
+    }
+
     pub fn get_id(&self) -> u32 {
         self.game_id
     }
@@ -416,6 +443,13 @@ impl Game {
         serde_wasm_bindgen::to_value(&self.missed_cards).unwrap()
     }
 
+    pub fn get_card_miss_counts(&self) -> JsValue {
+        serde_wasm_bindgen::to_value(&self.card_miss_counts).unwrap()
+    }
+
+    pub fn get_card_success_counts(&self) -> JsValue {
+        serde_wasm_bindgen::to_value(&self.card_success_counts).unwrap()
+    }
 
     pub fn get_score(&self) -> i32 {
         self.score

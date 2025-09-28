@@ -208,7 +208,7 @@ if (window.isFlashCardGameRunning) {
     }
 
     function render(timestamp) {
-        const currentCards = game.get_cards();
+        const currentCards = game.get_cards_for_render();
         const currentCardIds = new Set(currentCards.map(c => c.id));
 
         // Animate and remove solved cards
@@ -285,6 +285,9 @@ if (window.isFlashCardGameRunning) {
                     shieldsContainer.appendChild(shield);
                 }
                 front.appendChild(shieldsContainer);
+
+                // Cache references to the text elements
+                cardElement.textSpans = { front: frontText, back: backText };
             }
 
             const previousState = previousCardStates.get(card.id);
@@ -311,8 +314,9 @@ if (window.isFlashCardGameRunning) {
             cardElement.style.left = `${card.x}px`;
             cardElement.style.top = `${card.y}px`;
             
-            cardElement.querySelector('.front .card-text').textContent = card.front;
-            cardElement.querySelector('.back .card-text').textContent = card.back;
+            // Use cached references instead of querySelector
+            cardElement.textSpans.front.textContent = card.front;
+            cardElement.textSpans.back.textContent = card.back;
         }
 
         scoreElement.textContent = `Score: ${game.get_score()}`;
