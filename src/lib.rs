@@ -137,10 +137,18 @@ impl Default for Game {
 #[wasm_bindgen]
 pub fn get_default_deck() -> JsValue {
     let default_cards: Vec<CustomCard> = cards::CARD_DATA
-        .iter()
-        .map(|(f, b)| CustomCard {
-            front: f.to_string(),
-            back: b.to_string(),
+        .lines()
+        .filter(|line| !line.trim().is_empty() && !line.starts_with('#'))
+        .filter_map(|line| {
+            let parts: Vec<&str> = line.split('\t').collect();
+            if parts.len() >= 2 {
+                Some(CustomCard {
+                    front: parts[0].trim().to_string(),
+                    back: parts[1].trim().to_string(),
+                })
+            } else {
+                None
+            }
         })
         .collect();
     serde_wasm_bindgen::to_value(&default_cards).unwrap()
@@ -426,10 +434,18 @@ mod tests {
 
     fn new_game_for_test(width: f64, height: f64, seed: u64, mode: GameMode, speed_multiplier: f64) -> Game {
         let default_cards: Vec<CustomCard> = cards::CARD_DATA
-            .iter()
-            .map(|(f, b)| CustomCard {
-                front: f.to_string(),
-                back: b.to_string(),
+            .lines()
+            .filter(|line| !line.trim().is_empty() && !line.starts_with('#'))
+            .filter_map(|line| {
+                let parts: Vec<&str> = line.split('\t').collect();
+                if parts.len() >= 2 {
+                    Some(CustomCard {
+                        front: parts[0].trim().to_string(),
+                        back: parts[1].trim().to_string(),
+                    })
+                } else {
+                    None
+                }
             })
             .collect();
         let deck_jsvalue = serde_wasm_bindgen::to_value(&default_cards).unwrap();
