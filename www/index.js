@@ -187,14 +187,15 @@ if (window.isFlashCardGameRunning) {
             index === self.findIndex(c => c.raw_front === card.raw_front)
         );
 
-        let csvContent = unique_cards.map(c => `${c.raw_front};${c.raw_back}`).join("\n");
+        let fileContent = "#separator:tab\n#html:true\n";
+        fileContent += unique_cards.map(c => `${c.raw_front}\t${c.raw_back}`).join("\n");
         
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob([fileContent], { type: 'text/plain;charset=utf-8;' });
         const link = document.createElement("a");
         if (link.download !== undefined) {
             const url = URL.createObjectURL(blob);
             link.setAttribute("href", url);
-            link.setAttribute("download", "anki_export.csv");
+            link.setAttribute("download", "anki_export.txt");
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
