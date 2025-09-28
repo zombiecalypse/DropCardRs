@@ -55,7 +55,7 @@ if (window.isFlashCardGameRunning) {
     const isMobile = window.innerWidth <= 600;
     const speedMultiplier = isMobile ? 0.75 : 1.0;
     
-    const seed = Math.floor(Math.random() * 2**32);
+    const seed = BigInt(Math.floor(Math.random() * 2**32));
     let game;
     try {
         if (customDeck) {
