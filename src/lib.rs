@@ -96,6 +96,8 @@ fn normalize_string(s: &str) -> String {
 
 #[derive(Serialize)]
 struct UnlockedCard<'a> {
+    raw_front: &'a str,
+    raw_back: &'a str,
     front: &'a str,
     back: &'a str,
 }
@@ -314,10 +316,10 @@ impl Game {
         let unlocked_cards: Vec<UnlockedCard> = match self.mode {
             GameMode::Both => available_cards_data
                 .iter()
-                .flat_map(|(front, back)| {
+                .flat_map(|(raw_front, raw_back)| {
                     [
-                        UnlockedCard { front, back },
-                        UnlockedCard { front: back, back: front },
+                        UnlockedCard { raw_front, raw_back, front: raw_front, back: raw_back },
+                        UnlockedCard { raw_front, raw_back, front: raw_back, back: raw_front },
                     ]
                 })
                 .collect(),
@@ -325,9 +327,9 @@ impl Game {
                 let reverse = matches!(self.mode, GameMode::Reverse);
                 available_cards_data
                     .iter()
-                    .map(|(front, back)| {
-                        let (front, back) = if reverse { (back, front) } else { (front, back) };
-                        UnlockedCard { front, back }
+                    .map(|(raw_front, raw_back)| {
+                        let (front, back) = if reverse { (raw_back.as_str(), raw_front.as_str()) } else { (raw_front.as_str(), raw_back.as_str()) };
+                        UnlockedCard { raw_front, raw_back, front, back }
                     })
                     .collect()
             }
@@ -789,5 +791,41 @@ mod tests {
         assert_eq!(game.card_data.len(), 1);
         assert_eq!(game.card_data[0], ("Test".to_string(), "Deck".to_string()));
         assert_eq!(game.get_score(), 0);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_card_success_and_miss_counts() {
+        let mut game = new_game_for_test(600.0, 800.0, 0, GameMode::Normal, 1.0);
+        
+        // --- Test miss count ---
+        let card_q = "Q".to_string();
+        game.cards = vec![
+            Card { id: 0, raw_front: card_q.clone(), raw_back: "A".to_string(), front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: true },
+        ];
+        game.card_spawn_interval = 1_000_000.0; // prevent more spawns
+
+        // let card fall
+        let height = 800.0;
+        let card_speed = game.card_speed;
+        let flip_y = height - CARD_HEIGHT;
+        let time_to_flip = flip_y / card_speed;
+        game.tick(time_to_flip + 0.1);
+
+        let miss_counts: HashMap<String, u32> = serde_wasm_bindgen::from_value(game.get_card_miss_counts()).unwrap();
+        assert_eq!(*miss_counts.get(&card_q).unwrap(), 1);
+
+        // --- Test success count ---
+        let card_q2 = "Q2".to_string();
+        game.cards = vec![
+            Card { id: 1, raw_front: card_q2.clone(), raw_back: "A2".to_string(), front: "Q2".to_string(), back: "A2".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: true },
+        ];
+        
+        assert!(game.submit_answer("A2"));
+        let success_counts: HashMap<String, u32> = serde_wasm_bindgen::from_value(game.get_card_success_counts()).unwrap();
+        assert_eq!(*success_counts.get(&card_q2).unwrap(), 1);
+        
+        // Check that miss count for Q is preserved
+        let miss_counts_after: HashMap<String, u32> = serde_wasm_bindgen::from_value(game.get_card_miss_counts()).unwrap();
+        assert_eq!(*miss_counts_after.get(&card_q).unwrap(), 1);
     }
 }

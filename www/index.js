@@ -244,8 +244,8 @@ if (window.isFlashCardGameRunning) {
                     <tbody>
             `;
             for (const card of unlockedCards) {
-                const success = successCounts[card.front] || 0;
-                const miss = missCounts[card.front] || 0;
+                const success = successCounts[card.raw_front] || 0;
+                const miss = missCounts[card.raw_front] || 0;
                 content += `
                     <tr>
                         <td>${card.front}</td>
