@@ -543,6 +543,7 @@ mod tests {
     fn test_tick_moves_stops_flips_and_vanishes() {
         let height = 800.0;
         let mut game = new_game_for_test(600.0, height, 0, GameMode::Normal, 1.0);
+        game.card_miss_counts.insert("Q".to_string(), 2); // Mark card as not new
         game.cards = vec![
             Card { id: 0, raw_front: "Q".to_string(), raw_back: "A".to_string(), front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: false },
         ];
@@ -596,6 +597,7 @@ mod tests {
     fn test_game_over_and_restart() {
         let mut game = new_game_for_test(600.0, 800.0, 0, GameMode::Normal, 1.0);
         game.health = 1;
+        game.card_miss_counts.insert("Q".to_string(), 2); // Mark card as not new
         game.cards = vec![
             Card { id: 0, raw_front: "Q".to_string(), raw_back: "A".to_string(), front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None, is_new: false },
         ];
