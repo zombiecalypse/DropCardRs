@@ -1,1 +1,1 @@
-"use strict";(self.webpackChunkflashcards_www=self.webpackChunkflashcards_www||[]).push([[287],{287:(s,w,a)=>{s.exports=a.p+"b9128ac9bc9954bb9649.wasm"}}]);
+"use strict";(self.webpackChunkflashcards_www=self.webpackChunkflashcards_www||[]).push([[287],{287:(a,s,w)=>{a.exports=w.p+"b6a025a303a334e56aa3.wasm"}}]);
