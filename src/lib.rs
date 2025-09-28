@@ -96,7 +96,7 @@ struct UnlockedCard<'a> {
     back: &'a str,
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 struct CustomCard {
     front: String,
     back: String,
