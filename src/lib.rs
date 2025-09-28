@@ -9,12 +9,6 @@ use unidecode::unidecode;
 mod cards;
 
 #[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
-}
-
-#[wasm_bindgen]
 #[derive(Clone, Copy, PartialEq)]
 pub enum GameMode {
     Normal,
