@@ -122,6 +122,10 @@ body {
     background: lightblue;
 }
 
+.card.new .front {
+    background: lightgreen;
+}
+
 .card .back {
     background: lightcoral;
     transform: rotateX(180deg);

@@ -275,6 +275,11 @@ if (window.isFlashCardGameRunning) {
             } else {
                 cardElement.classList.remove('flipped');
             }
+            if (card.is_new) {
+                cardElement.classList.add('new');
+            } else {
+                cardElement.classList.remove('new');
+            }
             cardElement.style.left = `${card.x}px`;
             cardElement.style.top = `${card.y}px`;
             
