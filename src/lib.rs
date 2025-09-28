@@ -119,8 +119,8 @@ impl Default for Game {
 
 impl Game {
     fn get_available_cards_data(&self) -> &'static [(&'static str, &'static str)] {
-        let num_available_cards = (INITIAL_UNLOCKED_CARDS
-            + (self.score / SCORE_PER_CARD_UNLOCK) as usize * CARDS_PER_UNLOCK);
+        let num_available_cards = INITIAL_UNLOCKED_CARDS
+            + (self.score / SCORE_PER_CARD_UNLOCK) as usize * CARDS_PER_UNLOCK;
         let all_cards = cards::CARD_DATA;
         &all_cards[..num_available_cards.min(all_cards.len())]
     }
