@@ -6,7 +6,15 @@ if (window.isFlashCardGameRunning) {
     import('../pkg/flashcards.js').then(module => {
     const { Game, GameMode } = module;
 
-    const style = document.createElement('style');
+    const startScreen = document.getElementById('start-screen');
+    const startDefaultBtn = document.getElementById('start-default-btn');
+    const ankiImportInput = document.getElementById('anki-import-input');
+    const gameContainer = document.getElementById('game-container');
+
+    function startGame(customDeck = null) {
+        startScreen.classList.add('hidden');
+        gameContainer.classList.remove('hidden');
+        const style = document.createElement('style');
     style.textContent = `
         .shake {
             animation: shake 0.5s;
