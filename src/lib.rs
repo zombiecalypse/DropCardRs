@@ -3,6 +3,7 @@ use serde::{Serialize, Deserialize};
 use rand_chacha::ChaCha8Rng;
 use rand_chacha::rand_core::SeedableRng;
 use rand::seq::SliceRandom;
+use rand::Rng;
 
 mod cards;
 
@@ -47,7 +48,8 @@ pub struct Game {
     score_since_last_heart: i32,
     game_over: bool,
     paused: bool,
-    rng_seed: u32,
+    rng_seed: u64,
+    rng: ChaCha8Rng,
     game_id: u32,
     mode: GameMode,
     next_card_id: u32,
@@ -87,6 +89,7 @@ impl Default for Game {
             game_over: false,
             paused: false,
             rng_seed: 0,
+            rng: ChaCha8Rng::seed_from_u64(0),
             game_id: 0,
             mode: GameMode::Normal,
             next_card_id: 0,
@@ -96,12 +99,14 @@ impl Default for Game {
 
 #[wasm_bindgen]
 impl Game {
-    pub fn new(width: f64, height: f64, seed: u32, mode: GameMode) -> Game {
-        let game_id = seed.wrapping_mul(1664525).wrapping_add(1013904223);
+    pub fn new(width: f64, height: f64, seed: u64, mode: GameMode) -> Game {
+        let mut rng = ChaCha8Rng::seed_from_u64(seed);
+        let game_id = rng.random::<u32>();
 
         let mut game = Game {
             width,
             height,
+            rng: rng,
             rng_seed: seed,
             game_id,
             mode,
@@ -171,10 +176,7 @@ impl Game {
             let should_reverse = match self.mode {
                 GameMode::Reverse => true,
                 GameMode::Both => {
-                    // another random number to decide if we swap
-                    self.rng_seed = self.rng_seed.wrapping_mul(1664525).wrapping_add(1013904223);
-                    let random_val_for_swap = self.rng_seed as f64 / u32::MAX as f64;
-                    random_val_for_swap > 0.5
+                    self.rng.random::<bool>()
                 }
                 GameMode::Normal => false,
             };
@@ -184,16 +186,12 @@ impl Game {
             } else {
                 (raw_front, raw_back)
             };
-            
-            // Another random number for x position
-            self.rng_seed = self.rng_seed.wrapping_mul(1664525).wrapping_add(1013904223);
-            let random_val = self.rng_seed as f64 / u32::MAX as f64;
     
             self.cards.push(Card {
                 id: self.next_card_id,
                 front,
                 back,
-                x: (random_val * (self.width - 150.0)), // 150 is card width
+                x: self.rng.random_range(0.0..(self.width - 150.0)),
                 y: 0.0,
                 flipped: false,
                 time_since_flipped: None,
@@ -215,8 +213,7 @@ impl Game {
             }
         }
 
-        let mut rng = ChaCha8Rng::seed_from_u64(self.rng_seed.into());
-        new_deck.shuffle(&mut rng);
+        new_deck.shuffle(&mut self.rng);
 
         self.card_deck = new_deck;
     }
@@ -299,7 +296,7 @@ impl Game {
         self.time_since_last_card = 0.0;
         self.card_spawn_interval = 3.0;
         self.card_speed = 50.0;
-        self.rng_seed = self.game_id; // Reset seed to be deterministic for this game instance
+        self.rng = ChaCha8Rng::seed_from_u64(self.rng_seed);
         self.next_card_id = 0;
         self.spawn_card();
     }
