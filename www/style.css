@@ -293,6 +293,10 @@ body {
     width: 25px;
 }
 
+#debug-pane tr.locked {
+    color: #999;
+}
+
 #game-options {
     display: flex;
     flex-direction: column;

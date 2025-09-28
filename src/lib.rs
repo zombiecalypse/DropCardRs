@@ -102,6 +102,7 @@ struct CardForDisplay<'a> {
     back: &'a str,
     success_count: u32,
     miss_count: u32,
+    is_unlocked: bool,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -315,15 +316,20 @@ impl Game {
 
     pub fn get_all_cards_for_display(&self) -> JsValue {
         let all_cards_data = &self.card_data;
+        let num_unlocked_cards = (INITIAL_UNLOCKED_CARDS
+            + (self.score / SCORE_PER_CARD_UNLOCK) as usize * CARDS_PER_UNLOCK)
+            .min(all_cards_data.len());
         let cards_for_display: Vec<CardForDisplay> = match self.mode {
             GameMode::Both => all_cards_data
                 .iter()
-                .flat_map(|(raw_front, raw_back)| {
+                .enumerate()
+                .flat_map(|(i, (raw_front, raw_back))| {
                     let success_count = self.card_success_counts.get(raw_front).cloned().unwrap_or(0);
                     let miss_count = self.card_miss_counts.get(raw_front).cloned().unwrap_or(0);
+                    let is_unlocked = i < num_unlocked_cards;
                     [
-                        CardForDisplay { raw_front, raw_back, front: raw_front, back: raw_back, success_count, miss_count },
-                        CardForDisplay { raw_front, raw_back, front: raw_back, back: raw_front, success_count, miss_count },
+                        CardForDisplay { raw_front, raw_back, front: raw_front, back: raw_back, success_count, miss_count, is_unlocked },
+                        CardForDisplay { raw_front, raw_back, front: raw_back, back: raw_front, success_count, miss_count, is_unlocked },
                     ]
                 })
                 .collect(),
@@ -331,11 +337,13 @@ impl Game {
                 let reverse = matches!(self.mode, GameMode::Reverse);
                 all_cards_data
                     .iter()
-                    .map(|(raw_front, raw_back)| {
+                    .enumerate()
+                    .map(|(i, (raw_front, raw_back))| {
                         let (front, back) = if reverse { (raw_back.as_str(), raw_front.as_str()) } else { (raw_front.as_str(), raw_back.as_str()) };
                         let success_count = self.card_success_counts.get(raw_front).cloned().unwrap_or(0);
                         let miss_count = self.card_miss_counts.get(raw_front).cloned().unwrap_or(0);
-                        CardForDisplay { raw_front, raw_back, front, back, success_count, miss_count }
+                        let is_unlocked = i < num_unlocked_cards;
+                        CardForDisplay { raw_front, raw_back, front, back, success_count, miss_count, is_unlocked }
                     })
                     .collect()
             }

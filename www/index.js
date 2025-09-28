@@ -241,8 +241,9 @@ if (window.isFlashCardGameRunning) {
                     <tbody>
             `;
             for (const card of allCards) {
+                const rowClass = card.is_unlocked ? '' : 'class="locked"';
                 content += `
-                    <tr>
+                    <tr ${rowClass}>
                         <td>${card.front}</td>
                         <td>${card.back}</td>
                         <td>${card.success_count}</td>
