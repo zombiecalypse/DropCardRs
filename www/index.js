@@ -45,15 +45,14 @@ if (window.isFlashCardGameRunning) {
     const GAME_WIDTH = gameBoard.clientWidth;
     const GAME_HEIGHT = gameBoard.clientHeight;
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const mode_str = urlParams.get('mode');
+    const selectedMode = document.querySelector('input[name="game-mode"]:checked').value;
     let mode = GameMode.Normal;
-    if (mode_str === 'reverse') {
+    if (selectedMode === 'reverse') {
         mode = GameMode.Reverse;
-    } else if (mode_str === 'both') {
+    } else if (selectedMode === 'both') {
         mode = GameMode.Both;
     }
-    const isDebug = urlParams.get('debug') === 'true';
+    const isDebug = document.getElementById('debug-mode').checked;
 
     const isMobile = window.innerWidth <= 600;
     const speedMultiplier = isMobile ? 0.75 : 1.0;

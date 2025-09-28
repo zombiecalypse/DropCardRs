@@ -292,3 +292,34 @@ body {
     text-align: center;
     width: 25px;
 }
+
+#game-options {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background: #f9f9f9;
+}
+
+#game-options fieldset {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+#game-options legend {
+    padding: 0 5px;
+    font-weight: bold;
+}
+
+#game-options fieldset div, #game-options .debug-option {
+    display: flex;
+    align-items: center;
+}

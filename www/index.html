@@ -9,6 +9,27 @@
 <body>
     <div id="start-screen">
         <h1>DropCardRs</h1>
+        <div id="game-options">
+            <fieldset>
+                <legend>Game Mode</legend>
+                <div>
+                    <input type="radio" id="mode-normal" name="game-mode" value="normal" checked>
+                    <label for="mode-normal">Normal</label>
+                </div>
+                <div>
+                    <input type="radio" id="mode-reverse" name="game-mode" value="reverse">
+                    <label for="mode-reverse">Reverse</label>
+                </div>
+                <div>
+                    <input type="radio" id="mode-both" name="game-mode" value="both">
+                    <label for="mode-both">Both</label>
+                </div>
+            </fieldset>
+            <div class="debug-option">
+                <input type="checkbox" id="debug-mode">
+                <label for="debug-mode">Debug Mode</label>
+            </div>
+        </div>
         <button id="start-default-btn">Play with Default Deck</button>
         <label for="anki-import-input" class="button">Import Anki Deck (.txt)</label>
         <input type="file" id="anki-import-input" accept=".txt" style="display: none;">
