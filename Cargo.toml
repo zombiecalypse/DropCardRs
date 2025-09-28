@@ -4,6 +4,8 @@ version = "0.1.0"
 authors = ["Software Developer"]
 edition = "2021"
 description = "A timed flashcard game"
+repository = "https://github.com/zombiecalypse/DropCardRs"
+license = "MIT"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
