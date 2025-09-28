@@ -11,7 +11,8 @@ module.exports = (env, argv) => {
     output: {
       path: path.resolve(__dirname, 'dist'),
       filename: 'bootstrap.js',
-      publicPath: publicPath
+      publicPath: publicPath,
+      clean: true
     },
     plugins: [
       new HtmlWebpackPlugin({
