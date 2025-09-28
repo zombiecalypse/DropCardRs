@@ -8,8 +8,6 @@ use rand::seq::SliceRandom;
 use rand::Rng;
 use unidecode::unidecode;
 
-mod cards;
-
 // Game constants
 const CARD_WIDTH: f64 = 150.0;
 const CARD_HEIGHT: f64 = 50.0;
@@ -226,10 +224,6 @@ pub fn parse_deck(text: &str) -> JsValue {
     serde_wasm_bindgen::to_value(&cards).unwrap()
 }
 
-#[wasm_bindgen]
-pub fn get_default_deck() -> JsValue {
-    parse_deck(cards::CARD_DATA)
-}
 
 #[wasm_bindgen]
 pub fn configure_deck(full_deck: JsValue, ordered_indices: JsValue) -> Result<JsValue, JsValue> {
@@ -596,8 +590,10 @@ mod tests {
 
     wasm_bindgen_test_configure!(run_in_browser);
 
+    const TEST_CARD_DATA: &str = "Shwmae\tHello\nSut wyt ti?\tHow are you?\nIawn\tGood / Fine / Okay";
+
     fn new_game_for_test(width: f64, height: f64, seed: u64, mode: GameMode, speed_multiplier: f64) -> Game {
-        let deck_jsvalue = get_default_deck();
+        let deck_jsvalue = parse_deck(TEST_CARD_DATA);
         Game::new(width, height, seed, mode, speed_multiplier, deck_jsvalue).unwrap()
     }
 

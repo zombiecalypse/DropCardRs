@@ -6,9 +6,11 @@ if (window.isFlashCardGameRunning) {
     Promise.all([
         import('../pkg/flashcards.js'),
         import('../pkg/flashcards_bg.wasm'),
-    ]).then(async ([module, wasm]) => {
+        import('./cards.js'),
+    ]).then(async ([module, wasm, cards]) => {
     await module.default(wasm.default);
-    const { Game, GameMode, get_default_deck, parse_deck, configure_deck } = module;
+    const { Game, GameMode, parse_deck, configure_deck } = module;
+    const { CARD_DATA: defaultCardDataString } = cards;
 
     const startScreen = document.getElementById('start-screen');
     const startDefaultBtn = document.getElementById('start-default-btn');
@@ -443,7 +445,7 @@ if (window.isFlashCardGameRunning) {
     });
 
     startDefaultBtn.addEventListener('click', () => {
-        const defaultDeck = get_default_deck();
+        const defaultDeck = parse_deck(defaultCardDataString);
         showDeckConfiguration(defaultDeck);
     });
     
