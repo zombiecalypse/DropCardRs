@@ -131,16 +131,11 @@ impl Default for Game {
     }
 }
 
-impl Game {
-    fn get_available_cards_data(&self) -> &[(String, String)] {
-        let num_available_cards = INITIAL_UNLOCKED_CARDS
-            + (self.score / SCORE_PER_CARD_UNLOCK) as usize * CARDS_PER_UNLOCK;
-        &self.card_data[..num_available_cards.min(self.card_data.len())]
-    }
-}
+#[wasm_bindgen]
+pub struct DeckUtils;
 
 #[wasm_bindgen]
-impl Game {
+impl DeckUtils {
     pub fn get_default_deck() -> JsValue {
         let default_cards: Vec<CustomCard> = cards::CARD_DATA
             .iter()
@@ -151,7 +146,18 @@ impl Game {
             .collect();
         serde_wasm_bindgen::to_value(&default_cards).unwrap()
     }
+}
 
+impl Game {
+    fn get_available_cards_data(&self) -> &[(String, String)] {
+        let num_available_cards = INITIAL_UNLOCKED_CARDS
+            + (self.score / SCORE_PER_CARD_UNLOCK) as usize * CARDS_PER_UNLOCK;
+        &self.card_data[..num_available_cards.min(self.card_data.len())]
+    }
+}
+
+#[wasm_bindgen]
+impl Game {
     pub fn new(width: f64, height: f64, seed: u64, mode: GameMode, speed_multiplier: f64, custom_deck: JsValue) -> Result<Game, JsValue> {
         let custom_cards: Vec<CustomCard> = serde_wasm_bindgen::from_value(custom_deck)?;
         let card_data: Vec<(String, String)> = custom_cards
