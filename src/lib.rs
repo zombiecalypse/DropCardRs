@@ -95,11 +95,13 @@ fn normalize_string(s: &str) -> String {
 }
 
 #[derive(Serialize)]
-struct UnlockedCard<'a> {
+struct CardForDisplay<'a> {
     raw_front: &'a str,
     raw_back: &'a str,
     front: &'a str,
     back: &'a str,
+    success_count: u32,
+    miss_count: u32,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -311,43 +313,40 @@ impl Game {
         self.game_id
     }
 
-    pub fn get_unlocked_cards(&self) -> JsValue {
-        let available_cards_data = self.get_available_cards_data();
-        let unlocked_cards: Vec<UnlockedCard> = match self.mode {
-            GameMode::Both => available_cards_data
+    pub fn get_all_cards_for_display(&self) -> JsValue {
+        let all_cards_data = &self.card_data;
+        let cards_for_display: Vec<CardForDisplay> = match self.mode {
+            GameMode::Both => all_cards_data
                 .iter()
                 .flat_map(|(raw_front, raw_back)| {
+                    let success_count = self.card_success_counts.get(raw_front).cloned().unwrap_or(0);
+                    let miss_count = self.card_miss_counts.get(raw_front).cloned().unwrap_or(0);
                     [
-                        UnlockedCard { raw_front, raw_back, front: raw_front, back: raw_back },
-                        UnlockedCard { raw_front, raw_back, front: raw_back, back: raw_front },
+                        CardForDisplay { raw_front, raw_back, front: raw_front, back: raw_back, success_count, miss_count },
+                        CardForDisplay { raw_front, raw_back, front: raw_back, back: raw_front, success_count, miss_count },
                     ]
                 })
                 .collect(),
             GameMode::Normal | GameMode::Reverse => {
                 let reverse = matches!(self.mode, GameMode::Reverse);
-                available_cards_data
+                all_cards_data
                     .iter()
                     .map(|(raw_front, raw_back)| {
                         let (front, back) = if reverse { (raw_back.as_str(), raw_front.as_str()) } else { (raw_front.as_str(), raw_back.as_str()) };
-                        UnlockedCard { raw_front, raw_back, front, back }
+                        let success_count = self.card_success_counts.get(raw_front).cloned().unwrap_or(0);
+                        let miss_count = self.card_miss_counts.get(raw_front).cloned().unwrap_or(0);
+                        CardForDisplay { raw_front, raw_back, front, back, success_count, miss_count }
                     })
                     .collect()
             }
         };
-        serde_wasm_bindgen::to_value(&unlocked_cards).unwrap()
+        serde_wasm_bindgen::to_value(&cards_for_display).unwrap()
     }
 
     pub fn get_missed_cards(&self) -> JsValue {
         serde_wasm_bindgen::to_value(&self.missed_cards).unwrap()
     }
 
-    pub fn get_card_success_counts(&self) -> JsValue {
-        serde_wasm_bindgen::to_value(&self.card_success_counts).unwrap()
-    }
-
-    pub fn get_card_miss_counts(&self) -> JsValue {
-        serde_wasm_bindgen::to_value(&self.card_miss_counts).unwrap()
-    }
 
     pub fn get_score(&self) -> i32 {
         self.score

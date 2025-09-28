@@ -226,11 +226,9 @@ if (window.isFlashCardGameRunning) {
         }
 
         if (isDebug && debugPane) {
-            const unlockedCards = game.get_unlocked_cards();
-            const successCounts = game.get_card_success_counts();
-            const missCounts = game.get_card_miss_counts();
+            const allCards = game.get_all_cards_for_display();
             let content = `
-                <h3>Unlocked Cards</h3>
+                <h3>All Cards</h3>
                 <table>
                     <thead>
                         <tr>
@@ -242,15 +240,13 @@ if (window.isFlashCardGameRunning) {
                     </thead>
                     <tbody>
             `;
-            for (const card of unlockedCards) {
-                const success = successCounts[card.raw_front] || 0;
-                const miss = missCounts[card.raw_front] || 0;
+            for (const card of allCards) {
                 content += `
                     <tr>
                         <td>${card.front}</td>
                         <td>${card.back}</td>
-                        <td>${success}</td>
-                        <td>${miss}</td>
+                        <td>${card.success_count}</td>
+                        <td>${card.miss_count}</td>
                     </tr>
                 `;
             }
