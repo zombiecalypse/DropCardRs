@@ -1,5 +1,8 @@
 use wasm_bindgen::prelude::*;
 use serde::{Serialize, Deserialize};
+use rand_chacha::ChaCha8Rng;
+use rand_chacha::rand_core::SeedableRng;
+use rand::seq::SliceRandom;
 
 mod cards;
 
@@ -212,13 +215,8 @@ impl Game {
             }
         }
 
-        // Shuffle the deck using Fisher-Yates
-        for i in (1..new_deck.len()).rev() {
-            self.rng_seed = self.rng_seed.wrapping_mul(1664525).wrapping_add(1013904223);
-            let random_val = self.rng_seed as f64 / u32::MAX as f64;
-            let j = (random_val * (i + 1) as f64).floor() as usize;
-            new_deck.swap(i, j);
-        }
+        let mut rng = ChaCha8Rng::seed_from_u64(self.rng_seed.into());
+        new_deck.shuffle(&mut rng);
 
         self.card_deck = new_deck;
     }
