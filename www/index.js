@@ -268,10 +268,16 @@ if (window.isFlashCardGameRunning) {
 
                 const front = document.createElement('div');
                 front.className = 'front';
+                const frontText = document.createElement('span');
+                frontText.className = 'card-text';
+                front.appendChild(frontText);
                 cardElement.appendChild(front);
 
                 const back = document.createElement('div');
                 back.className = 'back';
+                const backText = document.createElement('span');
+                backText.className = 'card-text';
+                back.appendChild(backText);
                 cardElement.appendChild(back);
 
                 const shieldsContainer = document.createElement('div');
@@ -309,8 +315,8 @@ if (window.isFlashCardGameRunning) {
             cardElement.style.left = `${card.x}px`;
             cardElement.style.top = `${card.y}px`;
             
-            cardElement.querySelector('.front').textContent = card.front;
-            cardElement.querySelector('.back').textContent = card.back;
+            cardElement.querySelector('.front .card-text').textContent = card.front;
+            cardElement.querySelector('.back .card-text').textContent = card.back;
         }
 
         scoreElement.textContent = `Score: ${game.get_score()}`;
