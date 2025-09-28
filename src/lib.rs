@@ -164,6 +164,7 @@ impl Game {
     }
 
     fn update_cards(&mut self, dt: f64) {
+        let mut newly_flipped_count = 0;
         for card in self.cards.iter_mut() {
             if card.flipped {
                 if let Some(time) = &mut card.time_since_flipped {
@@ -171,17 +172,19 @@ impl Game {
                 }
             } else {
                 card.y += self.card_speed * dt;
-                if card.y >= self.height - CARD_HEIGHT { // 50 is card height
+                if card.y >= self.height - CARD_HEIGHT {
                     card.y = self.height - CARD_HEIGHT; // Stop at the bottom
                     card.flipped = true;
                     card.time_since_flipped = Some(0.0);
-                    if !self.game_over {
-                        self.health = self.health.saturating_sub(1);
-                        if self.health == 0 {
-                            self.game_over = true;
-                        }
-                    }
+                    newly_flipped_count += 1;
                 }
+            }
+        }
+
+        if newly_flipped_count > 0 && !self.game_over {
+            self.health = self.health.saturating_sub(newly_flipped_count);
+            if self.health == 0 {
+                self.game_over = true;
             }
         }
 
@@ -252,7 +255,7 @@ impl Game {
                 })
                 .collect(),
             GameMode::Normal | GameMode::Reverse => {
-                let reverse = self.mode == GameMode::Reverse;
+                let reverse = matches!(self.mode, GameMode::Reverse);
                 available_cards_data
                     .iter()
                     .map(|(front, back)| {
@@ -496,7 +499,7 @@ mod tests {
         game.card_spawn_interval = 1_000_000.0;
         let height = 800.0;
         let card_speed = game.card_speed;
-        let flip_y = height - 50.0;
+        let flip_y = height - CARD_HEIGHT;
         let time_to_flip = flip_y / card_speed;
 
         game.tick(time_to_flip + 0.1); // trigger flip and health loss
