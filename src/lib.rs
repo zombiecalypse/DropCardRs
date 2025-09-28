@@ -278,7 +278,7 @@ impl Game {
 
         let mut new_deck: Vec<_> = (0..DECK_CARD_DUPLICATES)
             .flat_map(|_| available_cards)
-            .map(|&(front, back)| (front.to_string(), back.to_string()))
+            .map(|(front, back)| (front.clone(), back.clone()))
             .collect();
 
         new_deck.shuffle(&mut self.rng);
@@ -353,6 +353,7 @@ impl Game {
     }
 
     pub fn restart(&mut self) {
+        let card_data = self.card_data.clone();
         *self = Self {
             width: self.width,
             height: self.height,
@@ -364,6 +365,7 @@ impl Game {
             rng: ChaCha8Rng::seed_from_u64(self.rng_seed),
             ..Self::default()
         };
+        self.card_data = card_data;
         self.card_speed *= self.speed_multiplier;
         self.spawn_card();
     }
