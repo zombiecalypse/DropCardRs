@@ -689,4 +689,49 @@ mod tests {
         assert!(welsh_fronts > 0, "Expected some cards with Welsh on front");
         assert!(english_fronts > 0, "Expected some cards with English on front");
     }
+
+    #[wasm_bindgen_test]
+    fn test_new_with_custom_deck_success() {
+        let custom_cards = vec![
+            CustomCard { front: "Hello".to_string(), back: "World".to_string() },
+            CustomCard { front: "Foo".to_string(), back: "Bar".to_string() },
+        ];
+        let custom_deck_jsvalue = serde_wasm_bindgen::to_value(&custom_cards).unwrap();
+        
+        let game_result = Game::new_with_custom_deck(600.0, 800.0, 0, GameMode::Normal, 1.0, custom_deck_jsvalue);
+        assert!(game_result.is_ok());
+        let game = game_result.unwrap();
+        
+        assert_eq!(game.card_data.len(), 2);
+        assert_eq!(game.card_data[0], ("Hello".to_string(), "World".to_string()));
+        let cards: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
+        assert_eq!(cards.len(), 1); // one card should be spawned on init
+    }
+
+    #[wasm_bindgen_test]
+    fn test_new_with_custom_deck_empty() {
+        let custom_cards: Vec<CustomCard> = vec![];
+        let custom_deck_jsvalue = serde_wasm_bindgen::to_value(&custom_cards).unwrap();
+        
+        let game_result = Game::new_with_custom_deck(600.0, 800.0, 0, GameMode::Normal, 1.0, custom_deck_jsvalue);
+        assert!(game_result.is_err());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_restart_preserves_custom_deck() {
+        let custom_cards = vec![
+            CustomCard { front: "Test".to_string(), back: "Deck".to_string() },
+        ];
+        let custom_deck_jsvalue = serde_wasm_bindgen::to_value(&custom_cards).unwrap();
+        
+        let mut game = Game::new_with_custom_deck(600.0, 800.0, 0, GameMode::Normal, 1.0, custom_deck_jsvalue).unwrap();
+        assert_eq!(game.card_data.len(), 1);
+
+        game.score = 100; // change some state
+        game.restart();
+        
+        assert_eq!(game.card_data.len(), 1);
+        assert_eq!(game.card_data[0], ("Test".to_string(), "Deck".to_string()));
+        assert_eq!(game.get_score(), 0);
+    }
 }
