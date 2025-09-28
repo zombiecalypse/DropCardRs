@@ -340,7 +340,7 @@ if (window.isFlashCardGameRunning) {
             const deck = lines.map(line => {
                 // Ignore comment lines in Anki exports
                 if (line.startsWith('#')) return null;
-                const parts = line.split(';');
+                const parts = line.split('\t');
                 if (parts.length >= 2) {
                     // Taking first two fields, ignoring others
                     return { front: parts[0].trim(), back: parts[1].trim() };
@@ -351,7 +351,7 @@ if (window.isFlashCardGameRunning) {
             if (deck.length > 0) {
                 startGame(deck);
             } else {
-                alert('Could not parse deck. Make sure it is a CSV file with "front;back" format, separated by semicolons.');
+                alert('Could not parse deck. Make sure it is a tab-separated .txt file with "front\tback" format.');
                 ankiImportInput.value = '';
             }
         };
