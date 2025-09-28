@@ -450,14 +450,44 @@ if (window.isFlashCardGameRunning) {
         const reader = new FileReader();
         reader.onload = (e) => {
             const text = e.target.result;
+
+            function expandParens(text) {
+                let results = [text];
+                let changed;
+                do {
+                    changed = false;
+                    const nextResults = new Set();
+                    for (const str of results) {
+                        const match = str.match(/\((.*?)\)/);
+                        if (match) {
+                            changed = true;
+                            const content = match[1];
+                            nextResults.add(str.replace(match[0], content));
+                            nextResults.add(str.replace(match[0], ''));
+                        } else {
+                            nextResults.add(str);
+                        }
+                    }
+                    results = Array.from(nextResults);
+                } while (changed);
+                return results.map(s => s.replace(/\s+/g, ' ').trim()).filter(Boolean);
+            }
+
+            function processSide(text) {
+                const parts = text.split('/').map(s => s.trim());
+                const expandedParts = parts.flatMap(part => expandParens(part));
+                return [...new Set(expandedParts)].join(' / ');
+            }
+
             const lines = text.split('\n').filter(line => line.trim() !== '');
             const deck = lines.map(line => {
                 // Ignore comment lines in Anki exports
                 if (line.startsWith('#')) return null;
                 const parts = line.split('\t');
                 if (parts.length >= 2) {
-                    // Taking first two fields, ignoring others
-                    return { front: parts[0].trim(), back: parts[1].trim() };
+                    const front = processSide(parts[0].trim());
+                    const back = processSide(parts[1].trim());
+                    return { front, back };
                 }
                 return null;
             }).filter(Boolean);
