@@ -97,7 +97,7 @@ impl Default for Game {
 impl Game {
     pub fn new(width: f64, height: f64, seed: u64, mode: GameMode) -> Game {
         let mut rng = ChaCha8Rng::seed_from_u64(seed);
-        let game_id = rng.gen::<u32>();
+        let game_id = rng.random::<u32>();
 
         let mut game = Game {
             width,
@@ -171,7 +171,7 @@ impl Game {
         if let Some((raw_front, raw_back)) = self.card_deck.pop() {
             let should_reverse = match self.mode {
                 GameMode::Reverse => true,
-                GameMode::Both => self.rng.gen::<bool>(),
+                GameMode::Both => self.rng.random::<bool>(),
                 GameMode::Normal => false,
             };
     
@@ -185,7 +185,7 @@ impl Game {
                 id: self.next_card_id,
                 front,
                 back,
-                x: self.rng.gen_range(0.0..(self.width - 150.0)),
+                x: self.rng.random_range(0.0..(self.width - 150.0)),
                 y: 0.0,
                 flipped: false,
                 time_since_flipped: None,
