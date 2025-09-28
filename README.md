@@ -9,22 +9,23 @@ This project is a simple browser-based game where flashcards fall from the top o
 -   **Progressive Difficulty:** The game starts easy and gets harder as your score increases. Card speed, spawn rate, and the number of simultaneous cards all increase over time.
 -   **Dynamic Card Unlocking:** Start with a small set of cards and unlock more as you score points.
 -   **Shuffled Deck:** Cards are drawn from a shuffled deck to ensure all unlocked cards are practiced equally.
+-   **Custom Decks:** Import your own study sets from Anki (or any tab-separated `.txt` file).
 -   **Multiple Correct Answers:** Some cards accept multiple correct translations (e.g., "Thank you" and "Thanks").
 -   **Game Pausing:** The game automatically pauses if the browser tab loses focus and can be manually paused with the `Tab` key.
 
-## Game Modes
+## How to Play
 
-The game supports different modes for practicing, controlled via URL parameters.
+On the start screen, you have two options:
 
--   **Normal Mode (Default):** Practice translating from Welsh to English.
-    -   `http://localhost:8080`
--   **Reverse Mode:** Practice translating from English to Welsh.
-    -   `http://localhost:8080/?mode=reverse`
--   **Both Mode:** Practice a random mix of both Welsh-to-English and English-to-Welsh.
-    -   `http://localhost:8080/?mode=both`
--   **Debug Mode:** Displays a side panel with all currently unlocked cards. This can be combined with other modes.
-    -   `http://localhost:8080/?debug=true`
-    -   `http://localhost:8080/?mode=reverse&debug=true`
+1.  **Start with Default Deck:** Use the built-in Welsh-to-English vocabulary set.
+2.  **Import Custom Deck:** Upload your own tab-separated `.txt` file (e.g., from an Anki export).
+
+After selecting a deck, you can configure which cards to include. Before starting the game, you can select a game mode:
+
+-   **Normal:** Practice from front-to-back.
+-   **Reverse:** Practice from back-to-front.
+-   **Both:** A random mix of Normal and Reverse modes.
+-   **Debug Mode:** An option to display a side panel with all cards and their statistics during gameplay.
 
 ## Prerequisites
 
@@ -64,13 +65,7 @@ wasm-pack test --headless --firefox
 
 This project is configured for automated deployment to GitHub Pages. When changes are pushed to the `main` branch, a GitHub Action will build the project and deploy it.
 
-The game will be available at [https://zombiecalypse.github.io/DropCardRs/](https://zombiecalypse.github.io/DropCardRs/).
-
-To deploy manually, you can run:
-```bash
-npm run deploy
-```
-This will build the project and push the `dist` directory to the `gh-pages` branch. You will need to configure your repository on GitHub to serve from the `gh-pages` branch.
+The game is automatically deployed and available at [https://zombiecalypse.github.io/DropCardRs/](https://zombiecalypse.github.io/DropCardRs/).
 
 ## Why?
 
