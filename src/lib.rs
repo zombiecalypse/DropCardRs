@@ -9,8 +9,9 @@ use unidecode::unidecode;
 mod cards;
 
 #[wasm_bindgen]
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub enum GameMode {
+    #[default]
     Normal,
     Reverse,
     Both,
@@ -87,7 +88,7 @@ impl Default for Game {
             rng_seed: 0,
             rng: ChaCha8Rng::seed_from_u64(0),
             game_id: 0,
-            mode: GameMode::Normal,
+            mode: GameMode::default(),
             next_card_id: 0,
         }
     }
@@ -200,12 +201,10 @@ impl Game {
         let available_cards = &all_cards[..num_available_cards.min(all_cards.len())];
         self.unlocked_cards_count = available_cards.len();
 
-        let mut new_deck = Vec::new();
-        for _ in 0..3 { // Add each card 3 times
-            for &(front, back) in available_cards {
-                new_deck.push((front.to_string(), back.to_string()));
-            }
-        }
+        let mut new_deck: Vec<_> = (0..3)
+            .flat_map(|_| available_cards)
+            .map(|&(front, back)| (front.to_string(), back.to_string()))
+            .collect();
 
         new_deck.shuffle(&mut self.rng);
 
