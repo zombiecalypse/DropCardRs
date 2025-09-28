@@ -57,6 +57,7 @@ if (window.isFlashCardGameRunning) {
     const answerInput = document.getElementById('answer-input');
     const submitBtn = document.getElementById('submit-btn');
     const pauseBtn = document.getElementById('pause-btn');
+    const ankiExportBtn = document.getElementById('anki-export-btn');
 
     let debugPane = null;
     let cardElements = new Map();
@@ -112,6 +113,7 @@ if (window.isFlashCardGameRunning) {
         if (game.is_game_over()) {
             game.restart();
             gameOverScreen.classList.add('hidden');
+            ankiExportBtn.classList.add('hidden');
             pauseScreen.style.display = 'none';
             answerInput.focus();
         } else if (game.is_paused()) {
@@ -152,6 +154,34 @@ if (window.isFlashCardGameRunning) {
             game.pause();
         }
     });
+
+    function exportToAnki() {
+        const missed_cards = game.get_missed_cards();
+        if (missed_cards.length === 0) {
+            alert("No missed cards to export.");
+            return;
+        }
+
+        const unique_cards = missed_cards.filter((card, index, self) => 
+            index === self.findIndex(c => c.raw_front === card.raw_front)
+        );
+
+        let csvContent = unique_cards.map(c => `${c.raw_front};${c.raw_back}`).join("\n");
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "anki_export.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    }
+
+    ankiExportBtn.addEventListener('click', exportToAnki);
 
     visibilityChangeHandler = () => {
         if (document.hidden && !game.is_game_over()) {
@@ -247,6 +277,12 @@ if (window.isFlashCardGameRunning) {
         // Game over
         if (game.is_game_over()) {
             gameOverScreen.classList.remove('hidden');
+            const missed_cards = game.get_missed_cards();
+            if (missed_cards.length > 0) {
+                ankiExportBtn.classList.remove('hidden');
+            } else {
+                ankiExportBtn.classList.add('hidden');
+            }
         }
 
         // Pause

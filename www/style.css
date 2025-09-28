@@ -138,3 +138,18 @@ body {
     border-radius: 5px;
     cursor: pointer;
 }
+
+#anki-export-btn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+#anki-export-btn.hidden {
+    display: none;
+}
