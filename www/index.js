@@ -324,7 +324,83 @@ if (window.isFlashCardGameRunning) {
         }
     }
 
-    startDefaultBtn.addEventListener('click', () => startGame());
+    function showDeckConfiguration(deck) {
+        loadedDeck = deck;
+        cardListContainer.innerHTML = '';
+        const ul = document.createElement('ul');
+        ul.id = 'card-list';
+        
+        deck.forEach((card, index) => {
+            const li = document.createElement('li');
+            li.draggable = true;
+            li.dataset.originalIndex = index;
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = true;
+            
+            const label = document.createElement('label');
+            label.textContent = `${card.front} - ${card.back}`;
+            
+            li.appendChild(checkbox);
+            li.appendChild(label);
+            ul.appendChild(li);
+        });
+        
+        cardListContainer.appendChild(ul);
+        
+        let draggingElement = null;
+
+        ul.addEventListener('dragstart', e => {
+            draggingElement = e.target;
+            e.dataTransfer.effectAllowed = 'move';
+            setTimeout(() => e.target.classList.add('dragging'), 0);
+        });
+
+        ul.addEventListener('dragend', e => {
+            if (draggingElement) {
+                draggingElement.classList.remove('dragging');
+            }
+        });
+
+        ul.addEventListener('dragover', e => {
+            e.preventDefault();
+            const target = e.target.closest('li');
+            if (target && target !== draggingElement) {
+                const rect = target.getBoundingClientRect();
+                const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > .5;
+                ul.insertBefore(draggingElement, next && target.nextSibling || target);
+            }
+        });
+
+        startScreen.classList.add('hidden');
+        deckConfigScreen.classList.remove('hidden');
+    }
+
+    startConfiguredGameBtn.addEventListener('click', () => {
+        const cardList = document.getElementById('card-list');
+        const configuredDeck = [];
+        cardList.querySelectorAll('li').forEach(li => {
+            const checkbox = li.querySelector('input[type="checkbox"]');
+            if (checkbox.checked) {
+                const cardIndex = parseInt(li.dataset.originalIndex, 10);
+                configuredDeck.push(loadedDeck[cardIndex]);
+            }
+        });
+        
+        if (configuredDeck.length === 0) {
+            alert("You must enable at least one card to start the game.");
+            return;
+        }
+
+        deckConfigScreen.classList.add('hidden');
+        initializeAndRunGame(configuredDeck);
+    });
+
+    startDefaultBtn.addEventListener('click', () => {
+        const defaultDeck = module.get_default_deck();
+        showDeckConfiguration(defaultDeck);
+    });
     
     ankiImportInput.addEventListener('change', (event) => {
         const file = event.target.files[0];
