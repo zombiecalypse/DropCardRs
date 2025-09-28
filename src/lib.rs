@@ -274,13 +274,13 @@ impl Game {
 
     fn replenish_deck(&mut self) {
         let available_cards = self.get_available_cards_data();
-        self.unlocked_cards_count = available_cards.len();
 
         let mut new_deck: Vec<_> = (0..DECK_CARD_DUPLICATES)
             .flat_map(|_| available_cards)
             .map(|(front, back)| (front.clone(), back.clone()))
             .collect();
 
+        self.unlocked_cards_count = available_cards.len();
         new_deck.shuffle(&mut self.rng);
 
         self.card_deck = new_deck;
