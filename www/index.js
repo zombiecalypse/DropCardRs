@@ -282,7 +282,7 @@ if (window.isFlashCardGameRunning) {
                     shield.textContent = '🛡️';
                     shieldsContainer.appendChild(shield);
                 }
-                cardElement.appendChild(shieldsContainer);
+                front.appendChild(shieldsContainer);
             }
 
             const previousState = previousCardStates.get(card.id);
