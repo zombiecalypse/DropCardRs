@@ -9,7 +9,7 @@ use unidecode::unidecode;
 mod cards;
 
 #[wasm_bindgen]
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum GameMode {
     Normal,
     Reverse,
@@ -102,7 +102,7 @@ impl Game {
         let mut game = Game {
             width,
             height,
-            rng: rng,
+            rng,
             rng_seed: seed,
             game_id,
             mode,
@@ -171,9 +171,7 @@ impl Game {
         if let Some((raw_front, raw_back)) = self.card_deck.pop() {
             let should_reverse = match self.mode {
                 GameMode::Reverse => true,
-                GameMode::Both => {
-                    self.rng.gen::<bool>()
-                }
+                GameMode::Both => self.rng.gen::<bool>(),
                 GameMode::Normal => false,
             };
     
@@ -230,20 +228,21 @@ impl Game {
             GameMode::Both => available_cards_data
                 .iter()
                 .flat_map(|(front, back)| {
-                    vec![
+                    [
                         UnlockedCard { front, back },
                         UnlockedCard { front: back, back: front },
                     ]
                 })
                 .collect(),
-            _ => available_cards_data
+            GameMode::Normal => available_cards_data
                 .iter()
-                .map(|(front, back)| {
-                    if self.mode == GameMode::Reverse {
-                        UnlockedCard { front: back, back: front }
-                    } else {
-                        UnlockedCard { front, back }
-                    }
+                .map(|(front, back)| UnlockedCard { front, back })
+                .collect(),
+            GameMode::Reverse => available_cards_data
+                .iter()
+                .map(|(front, back)| UnlockedCard {
+                    front: back,
+                    back: front,
                 })
                 .collect(),
         };
@@ -308,12 +307,11 @@ impl Game {
 
         let removed_count = initial_card_count - self.cards.len();
         
-        if removed_count > 0 {
+        let correct = removed_count > 0;
+        if correct {
             self.handle_correct_answer(removed_count as i32);
-            true
-        } else {
-            false
         }
+        correct
     }
 
     fn handle_correct_answer(&mut self, removed_count: i32) {
