@@ -597,6 +597,28 @@ mod tests {
         Game::new(width, height, seed, mode, speed_multiplier, deck_jsvalue).unwrap()
     }
 
+    const TEST_CARD_DATA_LARGE: &str = "Card 1\tAnswer 1
+Card 2\tAnswer 2
+Card 3\tAnswer 3
+Card 4\tAnswer 4
+Card 5\tAnswer 5
+Card 6\tAnswer 6
+Card 7\tAnswer 7
+Card 8\tAnswer 8
+Card 9\tAnswer 9
+Card 10\tAnswer 10
+Card 11\tAnswer 11
+Card 12\tAnswer 12
+Card 13\tAnswer 13
+Card 14\tAnswer 14
+Card 15\tAnswer 15
+";
+
+    fn new_game_for_test_large(width: f64, height: f64, seed: u64, mode: GameMode, speed_multiplier: f64) -> Game {
+        let deck_jsvalue = parse_deck(TEST_CARD_DATA_LARGE);
+        Game::new(width, height, seed, mode, speed_multiplier, deck_jsvalue).unwrap()
+    }
+
     #[test]
     fn test_normalize_string() {
         assert_eq!(normalize_string("  HeLlO, WoRlD!  "), "hello world");
@@ -812,7 +834,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_deck_replenishes_on_unlock() {
-        let mut game = new_game_for_test(600.0, 800.0, 0, GameMode::Normal, 1.0);
+        let mut game = new_game_for_test_large(600.0, 800.0, 0, GameMode::Normal, 1.0);
         
         // Initial state: 10 cards unlocked, deck has 30 cards, one is spawned
         assert_eq!(game.unlocked_cards_count, INITIAL_UNLOCKED_CARDS);
