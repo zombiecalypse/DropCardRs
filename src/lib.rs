@@ -4,6 +4,7 @@ use rand_chacha::ChaCha8Rng;
 use rand_chacha::rand_core::SeedableRng;
 use rand::seq::SliceRandom;
 use rand::Rng;
+use unidecode::unidecode;
 
 mod cards;
 
@@ -56,7 +57,8 @@ pub struct Game {
 }
 
 fn normalize_string(s: &str) -> String {
-    s.to_lowercase()
+    unidecode(s)
+        .to_lowercase()
         .chars()
         .filter(|c| c.is_alphanumeric() || c.is_whitespace())
         .collect::<String>()
@@ -355,6 +357,7 @@ mod tests {
         assert_eq!(normalize_string("  HeLlO, WoRlD!  "), "hello world");
         assert_eq!(normalize_string("How are you?"), "how are you");
         assert_eq!(normalize_string("test-ing 123"), "testing 123");
+        assert_eq!(normalize_string("crème brûlée"), "creme brulee");
     }
 
     #[wasm_bindgen_test]
@@ -394,6 +397,17 @@ mod tests {
         assert_eq!(cards.len(), 0);
     }
     
+    #[wasm_bindgen_test]
+    fn test_submit_answer_with_diacritics() {
+        let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal);
+        game.cards = vec![
+            Card { id: 0, front: "Q".to_string(), back: "crème brûlée".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
+        ];
+        assert!(game.submit_answer("creme brulee"));
+        let cards: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
+        assert_eq!(cards.len(), 0);
+    }
+
     #[wasm_bindgen_test]
     fn test_submit_answer_resolves_multiple_cards() {
         let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal);
