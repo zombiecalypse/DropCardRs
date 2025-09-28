@@ -171,11 +171,8 @@ impl Game {
         }
 
         if let Some((raw_front, raw_back)) = self.card_deck.pop() {
-            let should_reverse = match self.mode {
-                GameMode::Reverse => true,
-                GameMode::Both => self.rng.random::<bool>(),
-                GameMode::Normal => false,
-            };
+            let should_reverse =
+                self.mode == GameMode::Reverse || (self.mode == GameMode::Both && self.rng.random());
     
             let (front, back) = if should_reverse {
                 (raw_back, raw_front)
@@ -235,11 +232,8 @@ impl Game {
                 available_cards_data
                     .iter()
                     .map(|(front, back)| {
-                        if reverse {
-                            UnlockedCard { front: back, back: front }
-                        } else {
-                            UnlockedCard { front, back }
-                        }
+                        let (front, back) = if reverse { (back, front) } else { (front, back) };
+                        UnlockedCard { front, back }
                     })
                     .collect()
             }
@@ -278,19 +272,16 @@ impl Game {
     }
 
     pub fn restart(&mut self) {
-        self.cards.clear();
-        self.card_deck.clear();
-        self.unlocked_cards_count = 0;
-        self.score = 0;
-        self.health = 3;
-        self.score_since_last_heart = 0;
-        self.game_over = false;
-        self.paused = false;
-        self.time_since_last_card = 0.0;
-        self.card_spawn_interval = 3.0;
-        self.card_speed = 50.0;
-        self.rng = ChaCha8Rng::seed_from_u64(self.rng_seed);
-        self.next_card_id = 0;
+        *self = Self {
+            width: self.width,
+            height: self.height,
+            rng_seed: self.rng_seed,
+            game_id: self.game_id,
+            mode: self.mode,
+            max_health: self.max_health,
+            rng: ChaCha8Rng::seed_from_u64(self.rng_seed),
+            ..Self::default()
+        };
         self.spawn_card();
     }
 
