@@ -106,7 +106,7 @@ struct CardForDisplay<'a> {
     is_unlocked: bool,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 struct CustomCard {
     front: String,
     back: String,
@@ -229,6 +229,19 @@ pub fn parse_deck(text: &str) -> JsValue {
 #[wasm_bindgen]
 pub fn get_default_deck() -> JsValue {
     parse_deck(cards::CARD_DATA)
+}
+
+#[wasm_bindgen]
+pub fn configure_deck(full_deck: JsValue, ordered_indices: JsValue) -> Result<JsValue, JsValue> {
+    let deck: Vec<CustomCard> = serde_wasm_bindgen::from_value(full_deck)?;
+    let indices: Vec<usize> = serde_wasm_bindgen::from_value(ordered_indices)?;
+
+    let configured_deck: Vec<CustomCard> = indices
+        .into_iter()
+        .filter_map(|i| deck.get(i).cloned())
+        .collect();
+    
+    serde_wasm_bindgen::to_value(&configured_deck).map_err(|e| e.into())
 }
 
 impl Game {

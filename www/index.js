@@ -8,7 +8,7 @@ if (window.isFlashCardGameRunning) {
         import('../pkg/flashcards_bg.wasm'),
     ]).then(async ([module, wasm]) => {
     await module.default(wasm.default);
-    const { Game, GameMode, get_default_deck, parse_deck } = module;
+    const { Game, GameMode, get_default_deck, parse_deck, configure_deck } = module;
 
     const startScreen = document.getElementById('start-screen');
     const startDefaultBtn = document.getElementById('start-default-btn');
@@ -419,22 +419,27 @@ if (window.isFlashCardGameRunning) {
 
     startConfiguredGameBtn.addEventListener('click', () => {
         const cardList = document.getElementById('card-list');
-        const configuredDeck = [];
+        const orderedIndices = [];
         cardList.querySelectorAll('li').forEach(li => {
             const checkbox = li.querySelector('input[type="checkbox"]');
             if (checkbox.checked) {
                 const cardIndex = parseInt(li.dataset.originalIndex, 10);
-                configuredDeck.push(loadedDeck[cardIndex]);
+                orderedIndices.push(cardIndex);
             }
         });
-        
-        if (configuredDeck.length === 0) {
+
+        if (orderedIndices.length === 0) {
             alert("You must enable at least one card to start the game.");
             return;
         }
-
-        deckConfigScreen.classList.add('hidden');
-        initializeAndRunGame(configuredDeck);
+        
+        try {
+            const configuredDeck = configure_deck(loadedDeck, orderedIndices);
+            deckConfigScreen.classList.add('hidden');
+            initializeAndRunGame(configuredDeck);
+        } catch (e) {
+            alert(`Error configuring deck: ${e}`);
+        }
     });
 
     startDefaultBtn.addEventListener('click', () => {
