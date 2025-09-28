@@ -152,9 +152,8 @@ impl Game {
                     card.flipped = true;
                     card.time_since_flipped = Some(0.0);
                     if !self.game_over {
-                        self.health -= 1;
-                        if self.health <= 0 {
-                            self.health = 0;
+                        self.health = self.health.saturating_sub(1);
+                        if self.health == 0 {
                             self.game_over = true;
                         }
                     }
@@ -231,17 +230,19 @@ impl Game {
                     ]
                 })
                 .collect(),
-            GameMode::Normal => available_cards_data
-                .iter()
-                .map(|(front, back)| UnlockedCard { front, back })
-                .collect(),
-            GameMode::Reverse => available_cards_data
-                .iter()
-                .map(|(front, back)| UnlockedCard {
-                    front: back,
-                    back: front,
-                })
-                .collect(),
+            GameMode::Normal | GameMode::Reverse => {
+                let reverse = self.mode == GameMode::Reverse;
+                available_cards_data
+                    .iter()
+                    .map(|(front, back)| {
+                        if reverse {
+                            UnlockedCard { front: back, back: front }
+                        } else {
+                            UnlockedCard { front, back }
+                        }
+                    })
+                    .collect()
+            }
         };
         serde_wasm_bindgen::to_value(&unlocked_cards).unwrap()
     }
@@ -316,7 +317,7 @@ impl Game {
         self.score_since_last_heart += removed_count;
 
         // Check if new cards were unlocked and replenish deck if so
-        let num_unlocked_cards = ((10 + (self.score / 10) * 5) as usize).min(cards::CARD_DATA.len());
+        let num_unlocked_cards = self.get_available_cards_data().len();
         if num_unlocked_cards > self.unlocked_cards_count {
             self.replenish_deck();
         }
