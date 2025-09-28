@@ -11,9 +11,12 @@ if (window.isFlashCardGameRunning) {
     const startDefaultBtn = document.getElementById('start-default-btn');
     const ankiImportInput = document.getElementById('anki-import-input');
     const gameContainer = document.getElementById('game-container');
+    const deckConfigScreen = document.getElementById('deck-config-screen');
+    const cardListContainer = document.getElementById('card-list-container');
+    const startConfiguredGameBtn = document.getElementById('start-configured-game-btn');
+    let loadedDeck = [];
 
-    function startGame(customDeck = null) {
-        startScreen.classList.add('hidden');
+    function initializeAndRunGame(configuredDeck) {
         gameContainer.classList.remove('hidden');
         const style = document.createElement('style');
     style.textContent = `
@@ -58,11 +61,7 @@ if (window.isFlashCardGameRunning) {
     const seed = BigInt(Math.floor(Math.random() * 2**32));
     let game;
     try {
-        if (customDeck) {
-            game = Game.new_with_custom_deck(GAME_WIDTH, GAME_HEIGHT, seed, mode, speedMultiplier, customDeck);
-        } else {
-            game = Game.new(GAME_WIDTH, GAME_HEIGHT, seed, mode, speedMultiplier);
-        }
+        game = Game.new(GAME_WIDTH, GAME_HEIGHT, seed, mode, speedMultiplier, configuredDeck);
     } catch (e) {
         alert(`Error initializing game: ${e}`);
         startScreen.classList.remove('hidden');
@@ -349,7 +348,7 @@ if (window.isFlashCardGameRunning) {
             }).filter(Boolean);
 
             if (deck.length > 0) {
-                startGame(deck);
+                showDeckConfiguration(deck);
             } else {
                 alert('Could not parse deck. Make sure it is a tab-separated .txt file with "front\tback" format.');
                 ankiImportInput.value = '';

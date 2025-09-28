@@ -179,3 +179,73 @@ body {
 #anki-export-btn.hidden {
     display: none;
 }
+
+#deck-config-screen {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 500px;
+    height: 80%;
+    max-height: 600px;
+    background: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+#deck-config-screen h2 {
+    margin-top: 0;
+    text-align: center;
+}
+
+#card-list-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 10px;
+}
+
+#deck-config-screen ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#deck-config-screen li {
+    padding: 8px;
+    margin: 4px 0;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    cursor: grab;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#deck-config-screen li.dragging {
+    opacity: 0.5;
+}
+
+#deck-config-screen li input[type="checkbox"] {
+    margin-right: 10px;
+    min-width: 16px;
+    min-height: 16px;
+}
+
+#deck-config-screen li label {
+    flex-grow: 1;
+}
+
+#start-configured-game-btn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 1.2em;
+    width: 100%;
+    cursor: pointer;
+}
