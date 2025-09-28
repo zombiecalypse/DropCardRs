@@ -3,7 +3,8 @@ if (window.isFlashCardGameRunning) {
 } else {
     window.isFlashCardGameRunning = true;
 
-    import('../pkg/flashcards.js').then(module => {
+    import('../pkg/flashcards.js').then(async (module) => {
+    await module.default();
     const { Game, GameMode } = module;
 
     const startScreen = document.getElementById('start-screen');
