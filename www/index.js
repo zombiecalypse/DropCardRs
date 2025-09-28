@@ -3,7 +3,11 @@ if (window.isFlashCardGameRunning) {
 } else {
     window.isFlashCardGameRunning = true;
 
-    import('../pkg/flashcards.js').then(async (module) => {
+    Promise.all([
+        import('../pkg/flashcards.js'),
+        import('../pkg/flashcards_bg.wasm'),
+    ]).then(async ([module, wasm]) => {
+    await module.default(wasm.default);
     const { Game, GameMode, get_default_deck, parse_deck } = module;
 
     const startScreen = document.getElementById('start-screen');

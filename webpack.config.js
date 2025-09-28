@@ -26,6 +26,14 @@ module.exports = (env, argv) => {
     experiments: {
       asyncWebAssembly: true
     },
+    module: {
+      rules: [
+        {
+          test: /\.wasm$/,
+          type: "asset/resource",
+        },
+      ],
+    },
     mode: 'development',
     devtool: 'source-map',
   };

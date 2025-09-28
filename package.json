@@ -4,7 +4,7 @@
   "private": true,
   "homepage": "https://zombiecalypse.github.io/DropCardRs",
   "scripts": {
-    "build": "webpack --config webpack.config.js --mode production",
+    "build": "wasm-pack build --target web && webpack --config webpack.config.js --mode production",
     "serve": "npx webpack serve --open",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist -r git@github.com:zombiecalypse/DropCardRs.git"
