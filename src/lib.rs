@@ -339,6 +339,7 @@ impl Game {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashSet;
     use wasm_bindgen_test::*;
 
     wasm_bindgen_test_configure!(run_in_browser);
@@ -601,7 +602,11 @@ mod tests {
         }
         let cards: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
         
-        let welsh_fronts = cards.iter().filter(|c| cards::CARD_DATA.iter().any(|(f, _b)| f == &c.front)).count();
+        let original_fronts: HashSet<&str> = cards::CARD_DATA.iter().map(|(f, _)| *f).collect();
+        let welsh_fronts = cards
+            .iter()
+            .filter(|c| original_fronts.contains(c.front.as_str()))
+            .count();
         let english_fronts = cards.len() - welsh_fronts;
 
         assert!(welsh_fronts > 0, "Expected some cards with Welsh on front");
