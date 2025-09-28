@@ -388,7 +388,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_submit_correct_answer() {
-        let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal);
+        let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal, 1.0);
         game.cards = vec![
             Card { id: 0, raw_front: "Q".to_string(), raw_back: "Answer1 / Answer2".to_string(), front: "Q".to_string(), back: "Answer1 / Answer2".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
         ];
@@ -401,7 +401,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_submit_incorrect_answer() {
-        let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal);
+        let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal, 1.0);
         game.cards = vec![
             Card { id: 0, raw_front: "Q".to_string(), raw_back: "Answer".to_string(), front: "Q".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
         ];
@@ -414,7 +414,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_submit_answer_normalization() {
-        let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal);
+        let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal, 1.0);
         game.cards = vec![
             Card { id: 0, raw_front: "Q".to_string(), raw_back: "Answer One / How are you?".to_string(), front: "Q".to_string(), back: "Answer One / How are you?".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
         ];
@@ -425,7 +425,7 @@ mod tests {
     
     #[wasm_bindgen_test]
     fn test_submit_answer_with_diacritics() {
-        let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal);
+        let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal, 1.0);
         game.cards = vec![
             Card { id: 0, raw_front: "Q".to_string(), raw_back: "crème brûlée".to_string(), front: "Q".to_string(), back: "crème brûlée".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
         ];
@@ -436,7 +436,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_submit_answer_resolves_multiple_cards() {
-        let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal);
+        let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal, 1.0);
         game.cards = vec![
             Card { id: 0, raw_front: "Q1".to_string(), raw_back: "Answer".to_string(), front: "Q1".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
             Card { id: 1, raw_front: "Q2".to_string(), raw_back: "Answer".to_string(), front: "Q2".to_string(), back: "Answer".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
@@ -453,7 +453,7 @@ mod tests {
     #[wasm_bindgen_test]
     fn test_tick_moves_stops_flips_and_vanishes() {
         let height = 800.0;
-        let mut game = Game::new(600.0, height, 0, GameMode::Normal);
+        let mut game = Game::new(600.0, height, 0, GameMode::Normal, 1.0);
         game.cards = vec![
             Card { id: 0, raw_front: "Q".to_string(), raw_back: "A".to_string(), front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
         ];
@@ -487,7 +487,7 @@ mod tests {
     
     #[wasm_bindgen_test]
     fn test_health_gain_on_score() {
-        let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal);
+        let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal, 1.0);
         game.health = 1; // set health low to test gain
         game.cards = vec![
             Card { id: 0, raw_front: "Q1".to_string(), raw_back: "A".to_string(), front: "Q1".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
@@ -505,7 +505,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_game_over_and_restart() {
-        let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal);
+        let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal, 1.0);
         game.health = 1;
         game.cards = vec![
             Card { id: 0, raw_front: "Q".to_string(), raw_back: "A".to_string(), front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
@@ -537,7 +537,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_pause_and_resume() {
-        let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal);
+        let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal, 1.0);
         game.cards = vec![
             Card { id: 0, raw_front: "Q".to_string(), raw_back: "A".to_string(), front: "Q".to_string(), back: "A".to_string(), x: 0.0, y: 10.0, flipped: false, time_since_flipped: None },
         ];
@@ -571,7 +571,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_difficulty_increases_with_score() {
-        let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal);
+        let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal, 1.0);
         game.cards = vec![
             Card { id: 0, raw_front: "Q1".to_string(), raw_back: "A".to_string(), front: "Q1".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
             Card { id: 1, raw_front: "Q2".to_string(), raw_back: "A".to_string(), front: "Q2".to_string(), back: "A".to_string(), x: 0.0, y: 0.0, flipped: false, time_since_flipped: None },
@@ -591,7 +591,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_deck_replenishes_on_unlock() {
-        let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal);
+        let mut game = Game::new(600.0, 800.0, 0, GameMode::Normal, 1.0);
         
         // Initial state: 10 cards unlocked, deck has 30 cards, one is spawned
         assert_eq!(game.unlocked_cards_count, INITIAL_UNLOCKED_CARDS);
@@ -615,12 +615,12 @@ mod tests {
     #[wasm_bindgen_test]
     fn test_reverse_mode_card_spawn() {
         // use a seed that is not 0 to avoid predictable first card with index 0
-        let game = Game::new(600.0, 800.0, 1, GameMode::Reverse); 
+        let game = Game::new(600.0, 800.0, 1, GameMode::Reverse, 1.0); 
         let cards: Vec<Card> = serde_wasm_bindgen::from_value(game.get_cards()).unwrap();
         assert_eq!(cards.len(), 1);
         let card = &cards[0];
 
-        let normal_game = Game::new(600.0, 800.0, 1, GameMode::Normal);
+        let normal_game = Game::new(600.0, 800.0, 1, GameMode::Normal, 1.0);
         let normal_cards: Vec<Card> = serde_wasm_bindgen::from_value(normal_game.get_cards()).unwrap();
         let normal_card = &normal_cards[0];
 
@@ -630,7 +630,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_both_mode_card_spawn() {
-        let mut game = Game::new(600.0, 800.0, 1, GameMode::Both);
+        let mut game = Game::new(600.0, 800.0, 1, GameMode::Both, 1.0);
         for _ in 0..20 {
             game.spawn_card();
         }
