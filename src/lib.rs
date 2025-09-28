@@ -131,28 +131,16 @@ impl Default for Game {
     }
 }
 
-#[wasm_bindgen]
-pub struct DeckUtils {
-    _private: (),
-}
-
-#[wasm_bindgen]
-impl DeckUtils {
-    #[wasm_bindgen(constructor)]
-    pub fn new() -> Self {
-        Self { _private: () }
-    }
-
-    pub fn get_default_deck(&self) -> JsValue {
-        let default_cards: Vec<CustomCard> = cards::CARD_DATA
-            .iter()
-            .map(|(f, b)| CustomCard {
-                front: f.to_string(),
-                back: b.to_string(),
-            })
-            .collect();
-        serde_wasm_bindgen::to_value(&default_cards).unwrap()
-    }
+#[wasm_bindgen(js_name = getDefaultDeck)]
+pub fn get_default_deck() -> JsValue {
+    let default_cards: Vec<CustomCard> = cards::CARD_DATA
+        .iter()
+        .map(|(f, b)| CustomCard {
+            front: f.to_string(),
+            back: b.to_string(),
+        })
+        .collect();
+    serde_wasm_bindgen::to_value(&default_cards).unwrap()
 }
 
 impl Game {
