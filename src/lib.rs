@@ -234,10 +234,11 @@ impl Game {
                     card.flipped = true;
                     card.time_since_flipped = Some(0.0);
                     
-                    let miss_count = self.card_miss_counts.entry(card.raw_front.clone()).or_insert(0);
-                    if *miss_count >= 2 {
+                    if card.free_misses == 0 {
                         health_damage += 1;
                     }
+                    
+                    let miss_count = self.card_miss_counts.entry(card.raw_front.clone()).or_insert(0);
                     *miss_count += 1;
 
                     self.missed_cards.push(card.clone());
@@ -272,6 +273,8 @@ impl Game {
             };
     
             let miss_count = self.card_miss_counts.get(&raw_front).cloned().unwrap_or(0);
+            let success_count = self.card_success_counts.get(&raw_front).cloned().unwrap_or(0);
+            let total_interactions = miss_count + success_count;
             self.cards.push(Card {
                 id: self.next_card_id,
                 raw_front,
@@ -282,7 +285,7 @@ impl Game {
                 y: 0.0,
                 flipped: false,
                 time_since_flipped: None,
-                free_misses: (2 - miss_count).max(0),
+                free_misses: (2 - total_interactions).max(0),
             });
             self.next_card_id += 1;
         }
