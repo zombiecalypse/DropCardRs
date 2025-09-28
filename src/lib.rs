@@ -8,18 +8,6 @@ use unidecode::unidecode;
 
 mod cards;
 
-#[wasm_bindgen]
-pub fn get_default_deck() -> JsValue {
-    let default_cards: Vec<CustomCard> = cards::CARD_DATA
-        .iter()
-        .map(|(f, b)| CustomCard {
-            front: f.to_string(),
-            back: b.to_string(),
-        })
-        .collect();
-    serde_wasm_bindgen::to_value(&default_cards).unwrap()
-}
-
 // Game constants
 const CARD_WIDTH: f64 = 150.0;
 const CARD_HEIGHT: f64 = 50.0;
@@ -153,6 +141,17 @@ impl Game {
 
 #[wasm_bindgen]
 impl Game {
+    pub fn get_default_deck() -> JsValue {
+        let default_cards: Vec<CustomCard> = cards::CARD_DATA
+            .iter()
+            .map(|(f, b)| CustomCard {
+                front: f.to_string(),
+                back: b.to_string(),
+            })
+            .collect();
+        serde_wasm_bindgen::to_value(&default_cards).unwrap()
+    }
+
     pub fn new(width: f64, height: f64, seed: u64, mode: GameMode, speed_multiplier: f64, custom_deck: JsValue) -> Result<Game, JsValue> {
         let custom_cards: Vec<CustomCard> = serde_wasm_bindgen::from_value(custom_deck)?;
         let card_data: Vec<(String, String)> = custom_cards
