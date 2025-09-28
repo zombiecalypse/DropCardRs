@@ -1,6 +1,7 @@
 use wasm_bindgen::prelude::*;
 use serde::{Serialize, Deserialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use regex::Regex;
 use rand_chacha::ChaCha8Rng;
 use rand_chacha::rand_core::SeedableRng;
 use rand::seq::SliceRandom;
@@ -142,24 +143,81 @@ impl Default for Game {
     }
 }
 
+// This will expand text with parentheses into multiple variations.
+// E.g., "card(s)" becomes ["card", "cards"].
+fn expand_parens(text: &str) -> Vec<String> {
+    let re = Regex::new(r"\((.*?)\)").unwrap();
+    let mut results: HashSet<String> = HashSet::new();
+    results.insert(text.to_string());
+
+    loop {
+        let mut next_results = HashSet::new();
+        let mut changed_in_iteration = false;
+
+        for s in results {
+            if let Some(cap) = re.captures(&s) {
+                changed_in_iteration = true;
+                let full_match = cap.get(0).unwrap().as_str();
+                let content = cap.get(1).unwrap().as_str();
+
+                next_results.insert(s.replacen(full_match, content, 1));
+                next_results.insert(s.replacen(full_match, "", 1));
+            } else {
+                next_results.insert(s);
+            }
+        }
+
+        results = next_results;
+        if !changed_in_iteration {
+            break;
+        }
+    }
+
+    results.into_iter()
+        .map(|s| s.split_whitespace().collect::<Vec<_>>().join(" "))
+        .filter(|s| !s.is_empty())
+        .collect()
+}
+
+fn process_side(text: &str) -> String {
+    let parts: Vec<String> = text.split('/')
+        .map(|s| s.trim())
+        .flat_map(|part| expand_parens(part))
+        .collect();
+    
+    // Deduplicate
+    let mut unique_parts: Vec<String> = Vec::new();
+    for part in parts {
+        if !unique_parts.contains(&part) {
+            unique_parts.push(part);
+        }
+    }
+
+    unique_parts.join(" / ")
+}
+
 #[wasm_bindgen]
-pub fn get_default_deck() -> JsValue {
-    let default_cards: Vec<CustomCard> = cards::CARD_DATA
+pub fn parse_deck(text: &str) -> JsValue {
+    let cards: Vec<CustomCard> = text
         .lines()
         .filter(|line| !line.trim().is_empty() && !line.starts_with('#'))
         .filter_map(|line| {
             let parts: Vec<&str> = line.split('\t').collect();
             if parts.len() >= 2 {
-                Some(CustomCard {
-                    front: parts[0].trim().to_string(),
-                    back: parts[1].trim().to_string(),
-                })
+                let front = process_side(parts[0].trim());
+                let back = process_side(parts[1].trim());
+                Some(CustomCard { front, back })
             } else {
                 None
             }
         })
         .collect();
-    serde_wasm_bindgen::to_value(&default_cards).unwrap()
+    serde_wasm_bindgen::to_value(&cards).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn get_default_deck() -> JsValue {
+    parse_deck(cards::CARD_DATA)
 }
 
 impl Game {
@@ -456,6 +514,30 @@ impl Game {
             self.health = (self.health + hearts_to_gain).min(self.max_health);
             self.score_since_last_heart %= SCORE_PER_HEART;
         }
+    }
+
+    pub fn generate_anki_export(&self) -> String {
+        if self.missed_cards.is_empty() {
+            return "".to_string();
+        }
+
+        let mut unique_cards = Vec::new();
+        let mut seen_fronts = HashSet::new();
+
+        for card in &self.missed_cards {
+            if seen_fronts.insert(&card.raw_front) {
+                unique_cards.push(card);
+            }
+        }
+
+        let mut content = "#separator:tab\n#html:true\n".to_string();
+        let card_lines: Vec<String> = unique_cards
+            .iter()
+            .map(|c| format!("{}\t{}", c.raw_front, c.raw_back))
+            .collect();
+
+        content.push_str(&card_lines.join("\n"));
+        content
     }
 }
 

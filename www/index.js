@@ -4,7 +4,7 @@ if (window.isFlashCardGameRunning) {
     window.isFlashCardGameRunning = true;
 
     import('../pkg/flashcards.js').then(async (module) => {
-    const { Game, GameMode, get_default_deck } = module;
+    const { Game, GameMode, get_default_deck, parse_deck } = module;
 
     const startScreen = document.getElementById('start-screen');
     const startDefaultBtn = document.getElementById('start-default-btn');
@@ -162,18 +162,11 @@ if (window.isFlashCardGameRunning) {
     });
 
     function exportToAnki() {
-        const missed_cards = game.get_missed_cards();
-        if (missed_cards.length === 0) {
+        const fileContent = game.generate_anki_export();
+        if (!fileContent) {
             alert("No missed cards to export.");
             return;
         }
-
-        const unique_cards = missed_cards.filter((card, index, self) => 
-            index === self.findIndex(c => c.raw_front === card.raw_front)
-        );
-
-        let fileContent = "#separator:tab\n#html:true\n";
-        fileContent += unique_cards.map(c => `${c.raw_front}\t${c.raw_back}`).join("\n");
         
         const blob = new Blob([fileContent], { type: 'text/plain;charset=utf-8;' });
         const link = document.createElement("a");
@@ -450,47 +443,7 @@ if (window.isFlashCardGameRunning) {
         const reader = new FileReader();
         reader.onload = (e) => {
             const text = e.target.result;
-
-            function expandParens(text) {
-                let results = [text];
-                let changed;
-                do {
-                    changed = false;
-                    const nextResults = new Set();
-                    for (const str of results) {
-                        const match = str.match(/\((.*?)\)/);
-                        if (match) {
-                            changed = true;
-                            const content = match[1];
-                            nextResults.add(str.replace(match[0], content));
-                            nextResults.add(str.replace(match[0], ''));
-                        } else {
-                            nextResults.add(str);
-                        }
-                    }
-                    results = Array.from(nextResults);
-                } while (changed);
-                return results.map(s => s.replace(/\s+/g, ' ').trim()).filter(Boolean);
-            }
-
-            function processSide(text) {
-                const parts = text.split('/').map(s => s.trim());
-                const expandedParts = parts.flatMap(part => expandParens(part));
-                return [...new Set(expandedParts)].join(' / ');
-            }
-
-            const lines = text.split('\n').filter(line => line.trim() !== '');
-            const deck = lines.map(line => {
-                // Ignore comment lines in Anki exports
-                if (line.startsWith('#')) return null;
-                const parts = line.split('\t');
-                if (parts.length >= 2) {
-                    const front = processSide(parts[0].trim());
-                    const back = processSide(parts[1].trim());
-                    return { front, back };
-                }
-                return null;
-            }).filter(Boolean);
+            const deck = parse_deck(text);
 
             if (deck.length > 0) {
                 showDeckConfiguration(deck);
