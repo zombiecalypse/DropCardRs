@@ -86,20 +86,6 @@ if (window.isFlashCardGameRunning) {
     if (isDebug) {
         debugPane = document.createElement('div');
         debugPane.id = 'debug-pane';
-        Object.assign(debugPane.style, {
-            position: 'absolute',
-            top: '10px',
-            right: '10px',
-            width: '250px',
-            maxHeight: 'calc(100% - 20px)',
-            overflowY: 'auto',
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            border: '1px solid #ccc',
-            padding: '10px',
-            fontFamily: 'monospace',
-            fontSize: '12px',
-            zIndex: '100',
-        });
         document.body.appendChild(debugPane);
     }
 
@@ -244,13 +230,32 @@ if (window.isFlashCardGameRunning) {
             const unlockedCards = game.get_unlocked_cards();
             const successCounts = game.get_card_success_counts();
             const missCounts = game.get_card_miss_counts();
-            let content = '<h3>Unlocked Cards</h3><ul>';
+            let content = `
+                <h3>Unlocked Cards</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Front</th>
+                            <th>Back</th>
+                            <th>S</th>
+                            <th>M</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
             for (const card of unlockedCards) {
                 const success = successCounts[card.front] || 0;
                 const miss = missCounts[card.front] || 0;
-                content += `<li><b>${card.front}</b> - ${card.back} (S: ${success}, M: ${miss})</li>`;
+                content += `
+                    <tr>
+                        <td>${card.front}</td>
+                        <td>${card.back}</td>
+                        <td>${success}</td>
+                        <td>${miss}</td>
+                    </tr>
+                `;
             }
-            content += '</ul>';
+            content += '</tbody></table>';
             debugPane.innerHTML = content;
         }
 

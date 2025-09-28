@@ -253,3 +253,42 @@ body {
     width: 100%;
     cursor: pointer;
 }
+
+#debug-pane {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 350px;
+    max-height: calc(100% - 20px);
+    overflow-y: auto;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ccc;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 12px;
+    z-index: 100;
+}
+
+#debug-pane table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 11px;
+}
+
+#debug-pane th, #debug-pane td {
+    border: 1px solid #ddd;
+    padding: 4px;
+    text-align: left;
+    word-break: break-word;
+}
+
+#debug-pane th {
+    background-color: #f2f2f2;
+}
+
+#debug-pane td:nth-child(3), #debug-pane td:nth-child(4),
+#debug-pane th:nth-child(3), #debug-pane th:nth-child(4) {
+    text-align: center;
+    width: 25px;
+}
